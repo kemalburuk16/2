@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="{{ get_locale() }}">
+<head>
+  <meta charset="UTF-8">
+  {% import "seo_meta.html" as seo %}
+  {{ seo.seo_meta(meta or {
+      "title": "InstaVido – Instagram Downloader",
+      "desc": "Download Instagram videos, reels, photos, and stories instantly.",
+      "keywords": "instagram, download, reels, video, photo, story, save, free"
+  }) }}
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="{{ request.url }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/hero.css') }}">
+
+  {% set consent = request.cookies.get('consent_analytics') %}
+  {% if consent == 'true' %}
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2RHRQF27HK"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('consent','default',{ad_storage:'granted',analytics_storage:'granted'});
+    gtag('js', new Date()); gtag('config','G-2RHRQF27HK');
+  </script>
+  {% endif %}
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="icon" href="/static/favicon.png" type="image/png">
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <style>
+    *,*::before,*::after{box-sizing:border-box}
+    body{background:#f8f9fb;min-height:100vh;margin:0;overflow-x:hidden}
+
+    .brand-fancy{
+      font-family:'Montserrat',Arial,sans-serif;font-style:italic;font-weight:700;
+      letter-spacing:1.5px;font-size:1.8rem;
+      background:linear-gradient(90deg,#6f47ff 30%,#59c7f9 70%);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1
+    }
+    .brand-play{display:inline-block;margin-left:4px;vertical-align:middle;transition:.22s}
+    .brand-play:hover{transform:scale(1.15) rotate(9deg)}
+
+    .main-header{
+      min-height:110px;background:linear-gradient(90deg,#d3e5ff 0%,#fbefff 100%);
+      display:flex;align-items:center;justify-content:center;margin-bottom:.8rem;
+      box-shadow:0 4px 18px 0 #cecdff2e
+    }
+    @media (max-width:991.98px){.main-header{min-height:86px}}
+    @media (max-width:575.98px){
+      .brand-fancy{font-size:1.45rem;letter-spacing:1.1px}
+      .navbar-brand svg{width:24px;height:24px}
+    }
+
+    .ad-col-left{background:linear-gradient(135deg,#e3ffe6 60%,#d7edff 100%);border-radius:18px;min-height:420px;margin-bottom:20px;border:2px dashed #6bd48a5c}
+    .main-content-col{background:#fff7fe;border-radius:18px;min-height:420px;box-shadow:0 2px 12px #e0d2fa34;margin-bottom:20px}
+    .ad-col-right{background:linear-gradient(135deg,#fffbe2 60%,#e5f2ff 100%);border-radius:18px;min-height:420px;margin-bottom:20px;border:2px dashed #ffe8a97a}
+    .sticky-ad{position:sticky;top:70px;z-index:10}
+    @media (max-width:991.98px){.ad-col-left,.ad-col-right{display:none!important}}
+
+    .main-footer{background:#fff;border-top:1px solid #eee}
+    .footer-links a{color:#666;margin:0 7px}
+
+    #scrollTopBtn{position:fixed;bottom:78px;right:26px;z-index:1400;background:linear-gradient(135deg,#6f47ff 50%,#59c7f9 100%);color:#fff;border:none;border-radius:50%;width:50px;height:50px;box-shadow:0 2px 12px #6f47ff42;display:none;align-items:center;justify-content:center;font-size:2rem;transition:.2s}
+    #scrollTopBtn:hover{background:linear-gradient(135deg,#59c7f9 20%,#6f47ff 100%);box-shadow:0 5px 18px #a388f659}
+
+    /* NAVBAR */
+    .navbar{min-height:64px}
+    .navbar .container-fluid{flex-wrap:wrap}
+    .navbar-head{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%}
+    .center-block{flex:1 1 auto}
+    .navbar-tools{display:inline-flex;align-items:center;gap:10px;white-space:nowrap}
+    @media (max-width:991.98px){
+      .navbar{padding-top:6px;padding-bottom:6px}
+      .navbar .container-fluid{padding-left:10px;padding-right:10px}
+      .navbar-toggler{border:none}
+      .navbar-toggler:focus{box-shadow:none}
+    }
+
+    #mainNavbarDesktop .navbar-nav{gap:.25rem}
+
+    .navbar-nav .nav-link{position:relative;transition:color .15s, transform .12s;border-radius:12px;padding:8px 12px}
+    .navbar-nav .nav-link::before{
+      content:"";position:absolute;inset:-2px;border-radius:14px;opacity:0;pointer-events:none;
+      background:radial-gradient(120px 60px at center, rgba(255,105,180,.25), rgba(255,105,180,0));
+      transition:opacity .2s
+    }
+    .navbar-nav .nav-link:hover{transform:translateY(-1px)}
+    .navbar-nav .nav-link:hover::before{opacity:1}
+
+    /* Desktop dil dropdown (Bootstrap) */
+    .dropdown-menu.lang-menu{z-index:2002;min-width:220px;border:1px solid #dbe7fa;border-radius:12px;box-shadow:0 4px 14px #7b7bca21;padding:6px}
+    .lang-item-dd{display:flex;align-items:center;gap:10px;border-radius:10px;padding:7px 10px}
+    .lang-item-dd:hover{background:#f3e2ff}
+    .lang-item-dd img{width:20px;height:20px;border-radius:50%;box-shadow:0 0 4px #c5bfff37}
+
+    /* Mobil dil offcanvas */
+    .lang-flag-btn{border:0;background:transparent;padding:6px;border-radius:10px}
+    .lang-flag-btn img{width:22px;height:22px;border-radius:50%;box-shadow:0 0 4px #c5bfff37}
+    .offcanvas-top.lang-canvas{height:auto;max-height:80vh;border-bottom-left-radius:16px;border-bottom-right-radius:16px}
+    .lang-grid{display:grid;grid-template-columns:repeat(2, minmax(0,1fr));gap:10px}
+    .lang-item{display:flex;align-items:center;gap:10px;border:1px solid #e9e7ff;border-radius:12px;padding:10px 12px;text-decoration:none;color:#5a4df5;background:#fff;box-shadow:0 1px 6px rgba(98,80,255,.08)}
+    .lang-item:hover{background:#f6f1ff}
+
+    @media (min-width:992px){ #mainNavbar{display:none!important;} }
+    @media (max-width:991.98px){ #mainNavbarDesktop{display:none!important;} }
+
+  </style>
+</head>
+<body>
+{% from "ads/macros.html" import render_ad %}
+
+<!-- Cookie banner + modal (değişmedi) -->
+<div id="cookie-banner" style="display:none; position:fixed; bottom:0; width:100%; background:#222; color:#fff; padding:16px 0; z-index:9999;">
+  <div style="max-width:960px; margin:auto; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px;">
+    <div>
+      We use cookies for essential site functions, anonymous analytics, and ads.<br>
+      <a href="/cookie-policy" style="color:#90caf9;text-decoration:underline;">Review cookie details</a>
+    </div>
+    <div>
+      <button onclick="acceptCookies()" style="background:#4caf50; color:#fff; border:none; padding:8px 18px; border-radius:4px; font-weight:600;">Accept All</button>
+      <button onclick="declineCookies()" style="background:#bbb; color:#222; border:none; padding:8px 18px; border-radius:4px; font-weight:600; margin-left:8px;">Decline</button>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="declineModal" tabindex="-1" aria-labelledby="declineModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:16px;">
+      <div class="modal-header"><h5 class="modal-title" id="declineModalLabel">Cookies Required</h5></div>
+      <div class="modal-body"><p>To use <strong>instavido.com</strong>, you must accept cookies for analytics and ads.<br>Without cookies, our service cannot operate.<br>Would you like to accept cookies now?</p></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-success" onclick="acceptCookiesFromModal()">Accept Cookies</button>
+        <button type="button" class="btn btn-danger" onclick="forceExit()">Decline & Exit</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  function acceptCookies(){document.cookie="consent_analytics=true; path=/; max-age="+(60*60*24*365);document.getElementById("cookie-banner").style.display="none";location.reload();}
+  function acceptCookiesFromModal(){document.cookie="consent_analytics=true; path=/; max-age="+(60*60*24*365);var m=bootstrap.Modal.getInstance(document.getElementById('declineModal'));m.hide();location.reload();}
+  function declineCookies(){document.cookie="consent_analytics=false; path=/; max-age="+(60*60*24*365);document.getElementById("cookie-banner").style.display="none";new bootstrap.Modal(document.getElementById('declineModal')).show();}
+  function forceExit(){var m=bootstrap.Modal.getInstance(document.getElementById('declineModal'));m.hide();window.close();setTimeout(function(){window.location.href="https://www.google.com/";},400);}
+  if(!document.cookie.includes("consent_analytics=true") && !document.cookie.includes("consent_analytics=false")){document.getElementById("cookie-banner").style.display="block";}
+</script>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom py-2 px-3">
+  <div class="container-fluid d-flex align-items-start">
+
+    <div class="navbar-head">
+      <!-- Logo -->
+      <a class="navbar-brand text-decoration-none"
+         href="{% if get_locale() == 'en' %}{{ url_for('index', lang='en')|replace('/en', '') }}{% else %}{{ url_for('index', lang=get_locale()) }}{% endif %}">
+        <span class="brand-fancy">instavido.com</span>
+        <span class="brand-play" aria-hidden="true">
+          <svg width="30" height="30" viewBox="0 0 48 48">
+            <defs><linearGradient id="playGrad" x1="0%" y1="0%" x2="100%"><stop offset="0%" stop-color="#6f47ff"/><stop offset="100%" stop-color="#59c7f9"/></linearGradient></defs>
+            <polygon points="15,10 40,24 15,38" fill="url(#playGrad)">
+              <animate attributeName="points" values="15,10 40,24 15,38; 13,8 42,24 13,40; 15,10 40,24 15,38" dur="1.8s" repeatCount="indefinite"/>
+            </polygon>
+          </svg>
+        </span>
+      </a>
+
+      <!-- Orta Menü (desktop) -->
+      <div id="mainNavbarDesktop" class="center-block d-none d-lg-flex justify-content-center">
+        <ul class="navbar-nav mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link d-flex align-items-center gap-1 {% if request.endpoint=='video' %}active{% endif %}" href="{{ url_for('video', lang=get_locale()) }}"><i class="bi bi-camera-video"></i>{{ _('Video') }}</a></li>
+          <li class="nav-item"><a class="nav-link d-flex align-items-center gap-1 {% if request.endpoint=='photo' %}active{% endif %}" href="{{ url_for('photo', lang=get_locale()) }}"><i class="bi bi-image"></i>{{ _('Photo') }}</a></li>
+          <li class="nav-item"><a class="nav-link d-flex align-items-center gap-1 {% if request.endpoint=='reels' %}active{% endif %}" href="{{ url_for('reels', lang=get_locale()) }}"><i class="bi bi-play-circle"></i>{{ _('Reels') }}</a></li>
+          <li class="nav-item"><a class="nav-link d-flex align-items-center gap-1 {% if request.endpoint=='igtv' %}active{% endif %}" href="{{ url_for('igtv', lang=get_locale()) }}"><i class="bi bi-tv"></i>{{ _('IGTV') }}</a></li>
+          <li class="nav-item"><a class="nav-link d-flex align-items-center gap-1 {% if request.endpoint=='story' %}active{% endif %}" href="{{ url_for('story', lang=get_locale()) }}"><i class="bi bi-clock-history"></i>{{ _('Story') }}</a></li>
+        </ul>
+      </div>
+
+      <!-- Sağ araçlar -->
+      <div class="navbar-tools ms-auto">
+        {% set current_lang = get_locale() %}
+
+        <!-- Desktop: Bootstrap dropdown -->
+        <div class="dropdown d-none d-lg-inline-block">
+          <button class="btn btn-link text-decoration-none dropdown-toggle px-2"
+                  type="button" id="langDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+            <img src="https://flagcdn.com/{{ {'en':'gb','tr':'tr','hi':'in','de':'de','fr':'fr','ko':'kr','ar':'sa','es':'es'}.get(current_lang,'gb') }}.svg" width="20" style="border-radius:50%" alt="">
+            <span class="fw-bold" style="color:#ff2785">{{ dict(en='English', tr='Türkçe', hi='हिन्दी', de='Deutsch', fr='Français', ko='한국어', ar='العربية', es='Español')[current_lang] }}</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end lang-menu" aria-labelledby="langDropdown">
+            {% set current_path = request.path %}
+            {% for code, name, flag in [
+              ('en','English','gb'), ('tr','Türkçe','tr'), ('hi','हिन्दी','in'), ('de','Deutsch','de'),
+              ('fr','Français','fr'), ('ko','한국어','kr'), ('ar','العربية','sa'), ('es','Español','es')
+            ] %}
+              {% if code == "en" %}
+                {% if current_path[1:3] in LANGUAGES %}{% set new_path = current_path[3:] or "/" %}{% else %}{% set new_path = current_path %}{% endif %}
+              {% else %}
+                {% if current_path[1:3] in LANGUAGES %}{% set new_path = '/' + code + current_path[3:] %}{% else %}{% set new_path = '/' + code + current_path %}{% endif %}
+              {% endif %}
+              <li>
+                <a class="dropdown-item lang-item-dd {% if code==current_lang %}active fw-bold{% endif %}" href="{{ new_path }}">
+                  <img src="https://flagcdn.com/{{flag}}.svg" alt=""> <span>{{ name }}</span>
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+
+        <!-- Mobil dil (Offcanvas) -->
+        <button class="lang-flag-btn d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#langOffcanvas" aria-controls="langOffcanvas" aria-label="Languages">
+          <img src="https://flagcdn.com/{{ {'en':'gb','tr':'tr','hi':'in','de':'de','fr':'fr','ko':'kr','ar':'sa','es':'es'}.get(current_lang,'gb') }}.svg" alt="">
+        </button>
+
+        <!-- Hamburger (mobil) -->
+        <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobil menü -->
+    <div class="collapse navbar-collapse d-lg-none w-100" id="mainNavbar">
+      <ul class="navbar-nav mt-2 w-100">
+        <li class="nav-item"><a class="nav-link {% if request.endpoint=='video' %}active{% endif %}" href="{{ url_for('video', lang=get_locale()) }}"><i class="bi bi-camera-video me-1"></i>{{ _('Video') }}</a></li>
+        <li class="nav-item"><a class="nav-link {% if request.endpoint=='photo' %}active{% endif %}" href="{{ url_for('photo', lang=get_locale()) }}"><i class="bi bi-image me-1"></i>{{ _('Photo') }}</a></li>
+        <li class="nav-item"><a class="nav-link {% if request.endpoint=='reels' %}active{% endif %}" href="{{ url_for('reels', lang=get_locale()) }}"><i class="bi bi-play-circle me-1"></i>{{ _('Reels') }}</a></li>
+        <li class="nav-item"><a class="nav-link {% if request.endpoint=='igtv' %}active{% endif %}" href="{{ url_for('igtv', lang=get_locale()) }}"><i class="bi bi-tv me-1"></i>{{ _('IGTV') }}</a></li>
+        <li class="nav-item"><a class="nav-link {% if request.endpoint=='story' %}active{% endif %}" href="{{ url_for('story', lang=get_locale()) }}"><i class="bi bi-clock-history me-1"></i>{{ _('Story') }}</a></li>
+        <li class="nav-item"><hr class="dropdown-divider"></li>
+        <li class="nav-item"><a class="nav-link" href="{% if get_locale() == 'en' %}/faq{% else %}/{{ get_locale() }}/faq{% endif %}"><i class="bi bi-question-circle me-1"></i>{{ _('FAQ') }}</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobil Dil Offcanvas -->
+<div class="offcanvas offcanvas-top lang-canvas d-lg-none" tabindex="-1" id="langOffcanvas" aria-labelledby="langOffcanvasLabel">
+  <div class="offcanvas-header">
+    <h6 class="offcanvas-title" id="langOffcanvasLabel">{{ _('Choose language') }}</h6>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body pt-0">
+    <div class="lang-grid">
+      {% set current_path = request.path %}
+      {% for code, name, flag in [
+        ('en','English','gb'), ('tr','Türkçe','tr'), ('hi','हिन्दी','in'), ('de','Deutsch','de'),
+        ('fr','Français','fr'), ('ko','한국어','kr'), ('ar','العربية','sa'), ('es','Español','es')
+      ] %}
+        {% if code == "en" %}
+          {% if current_path[1:3] in LANGUAGES %}{% set new_path = current_path[3:] or "/" %}{% else %}{% set new_path = current_path %}{% endif %}
+        {% else %}
+          {% if current_path[1:3] in LANGUAGES %}{% set new_path = '/' + code + current_path[3:] %}{% else %}
+            {% set new_path = '/' + code + current_path %}
+          {% endif %}
+        {% endif %}
+        <a class="lang-item" href="{{ new_path }}">
+          <img src="https://flagcdn.com/{{flag}}.svg" width="22" height="22" style="border-radius:50%" alt="">
+          <span>{{ name }}</span>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- HEADER TOP AD -->
+<div class="container mt-2 mb-1">
+  {{ render_ad("header_top") }}
+</div>
+
+<header class="main-header p-0 m-0" style="width:100vw;max-width:100vw;border-radius:0;">
+  {% block header %}{% endblock %}
+</header>
+
+<div class="container mb-4">
+  <div class="row gx-3">
+    <aside class="col-lg-2 d-none d-lg-block">
+      <div class="sticky-ad ad-col-left d-flex flex-column align-items-center justify-content-center p-3 text-center">
+        {{ render_ad("sidebar_left") }}
+        {% block left_ad %}{% endblock %}
+      </div>
+    </aside>
+    <main class="col-12 col-lg-8 main-content-col py-3 px-2" id="main-content">
+      {% block content %}{% endblock %}
+    </main>
+    <aside class="col-lg-2 d-none d-lg-block">
+      <div class="sticky-ad ad-col-right d-flex flex-column align-items-center justify-content-center p-3 text-center">
+        {{ render_ad("sidebar_right") }}
+        {% block right_ad %}{% endblock %}
+      </div>
+    </aside>
+  </div>
+</div>
+
+<footer class="main-footer mt-5 py-4" style="background: linear-gradient(90deg, #fff7fe 0%, #e6f6ff 100%); border-top: 1px solid #eee;">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-12 col-md-4 mb-3 mb-md-0 text-center text-md-start">
+        <a href="{% if get_locale() == 'en' %}{{ url_for('index', lang='en')|replace('/en', '') }}{% else %}{{ url_for('index', lang=get_locale()) }}{% endif %}" class="brand-fancy text-decoration-none" style="font-size:1.45rem;">
+          <img src="/static/favicon.png" style="width:30px;vertical-align:-7px;margin-right:7px;" alt=""> InstaVido.com
+        </a>
+        <div class="small text-muted mt-1">© 2025 InstaVido – {{ _('All rights reserved.') }}</div>
+      </div>
+      <div class="col-12 col-md-4 mb-3 mb-md-0 text-center">
+        <div class="footer-links d-flex flex-wrap justify-content-center gap-3">
+          <a href="{{ url_for('video', lang=get_locale()) }}">{{ _('Video') }}</a>
+          <a href="{{ url_for('photo', lang=get_locale()) }}">{{ _('Photo') }}</a>
+          <a href="{{ url_for('reels', lang=get_locale()) }}">{{ _('Reels') }}</a>
+          <a href="{{ url_for('igtv', lang=get_locale()) }}">{{ _('IGTV') }}</a>
+          <a href="{{ url_for('story', lang=get_locale()) }}">{{ _('Story') }}</a>
+          <a href="{{ url_for('privacy') }}">{{ _('Privacy Policy') }}</a>
+          <a href="{{ url_for('terms') }}">{{ _('Terms') }}</a>
+          <a href="{{ url_for('cookie_policy') }}">{{ _('Cookie Policy') }}</a>
+          <a href="{{ url_for('contact') }}">{{ _('Contact') }}</a>
+        </div>
+      </div>
+      <div class="col-12 col-md-4 text-center text-md-end">
+        <div class="mb-2">
+          <a href="https://t.me/instavidocom" class="text-muted me-2" target="_blank" aria-label="Telegram"><i class="bi bi-telegram" style="font-size:1.4rem;"></i></a>
+          <a href="mailto:support@instavido.com" class="text-muted me-2" aria-label="E-mail"><i class="bi bi-envelope-at" style="font-size:1.4rem;"></i></a>
+          <a href="https://www.instagram.com/instavidocom" class="text-muted me-2" target="_blank" aria-label="Instagram"><i class="bi bi-instagram" style="font-size:1.4rem;"></i></a>
+          <a href="https://twitter.com/instavidocom" class="text-muted" target="_blank" aria-label="Twitter"><i class="bi bi-twitter-x" style="font-size:1.4rem;"></i></a>
+        </div>
+        <div class="lang-switcher-footer d-inline-flex gap-2 mt-1">
+          {% for code, name in [('en','EN'), ('tr','TR'), ('hi','HI'), ('de','DE'), ('fr','FR'), ('ko','KO'), ('ar','AR'), ('es','ES')] %}
+            {% if code == 'en' %}
+              <a href="{{ request.path[3:] if request.path[1:3] in LANGUAGES else request.path }}" class="{% if get_locale()==code %}fw-bold text-primary{% else %}text-muted{% endif %}" style="font-size:1.04em;">{{name}}</a>
+            {% else %}
+              <a href="/{{code}}{{ request.path[3:] if request.path[1:3] in LANGUAGES else request.path }}"
+                 class="{% if get_locale()==code %}fw-bold text-primary{% else %}text-muted{% endif %}"
+                 style="font-size:1.04em;">{{name}}</a>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="text-center mt-3 small" style="color:#a2a2a2;">
+      {{ _('This website is not affiliated with Instagram or Meta Platforms Inc.') }}
+    </div>
+  </div>
+</footer>
+
+<!-- Bottom Ad Bar (değişmedi) -->
+<style>
+  :root{--bb-radius:14px;--bb-ribbon-h:8px;--bb-z:1200}
+  .bb{position:fixed;left:0;right:0;bottom:0;z-index:var(--bb-z)}
+  .bb-wrap{max-width:1080px;margin:0 auto;padding:0 12px 0}
+  .bb-box{border-radius:var(--bb-radius) var(--bb-radius) 0 0;box-shadow:0 -8px 28px rgba(14,23,38,.25);background:linear-gradient(135deg,#ffffff 0%,#e8f3ff 35%,#cfe7ff 100%);border-top:1px solid rgba(0,0,0,.06);overflow:hidden}
+  .bb-head{display:flex;align-items:center;gap:10px;padding:10px 14px;background:linear-gradient(90deg,#eaf3ff 0%,#ffffff 100%)}
+  .bb-title{font-weight:700;letter-spacing:.2px;color:#0f172a}
+  .bb-toggle{margin-left:auto;display:inline-flex;align-items:center;justify-content:center;width:38px;height:30px;border:0;background:#0ea5e9;color:#fff;border-radius:20px;cursor:pointer}
+  .bb-toggle i{font-size:1.1rem;line-height:0}
+  .bb-inner{min-height:56px;padding:10px 14px 14px;display:flex;align-items:center;justify-content:center}
+  .bb.collapsed .bb-box{display:none}
+  .bb-ribbon{display:none;height:var(--bb-ribbon-h);background:linear-gradient(90deg,#93c5fd 0%,#38bdf8 100%);position:relative}
+  .bb.collapsed .bb-ribbon{display:block}
+  .bb-fab{position:absolute;right:12px;top:-16px;width:32px;height:32px;border:0;background:#0ea5e9;color:#fff;box-shadow:0 6px 18px rgba(2,132,199,.35);display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .bb-slot-desktop{display:none}.bb-slot-mobile{display:block}
+  @media (min-width:992px){.bb-slot-desktop{display:block}.bb-slot-mobile{display:none}}
+  @media (max-width:575.98px){.bb-wrap{padding:0 8px 0}}
+</style>
+<div id="bb" class="bb collapsed" aria-hidden="true">
+  <div class="bb-wrap">
+    <div class="bb-ribbon"><button class="bb-fab" id="bbOpen" aria-label="Open ads"><i class="bi bi-chevron-up"></i></button></div>
+    <div class="bb-box">
+      <div class="bb-head">
+        <div class="bb-title"><i class="bi bi-badge-ad me-1"></i>Sponsored</div>
+        <button class="bb-toggle" id="bbClose" aria-label="Hide"><i class="bi bi-chevron-down"></i></button>
+      </div>
+      <div class="bb-inner">
+        <div class="bb-slot-desktop">{{ render_ad("bottom_bar_desktop") }}</div>
+        <div class="bb-slot-mobile">{{ render_ad("bottom_bar_mobile") }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  const bb=document.getElementById('bb');const btnOpen=document.getElementById('bbOpen');const btnClose=document.getElementById('bbClose');if(!bb||!btnOpen||!btnClose)return;
+  const KEY='iv_bb_state';
+  const hasHtml=(el)=>el&&(el.textContent.trim().length||el.querySelector('*'));
+  const desktop=bb.querySelector('.bb-slot-desktop');const mobile=bb.querySelector('.bb-slot-mobile');
+  if(!hasHtml(desktop)&&!hasHtml(mobile)){bb.style.display='none';return;}
+  try{const st=localStorage.getItem(KEY); if(st!=='closed'){bb.classList.remove('collapsed');bb.setAttribute('aria-hidden','false');}else{bb.classList.add('collapsed');}}catch(e){bb.classList.remove('collapsed');bb.setAttribute('aria-hidden','false');}
+  btnOpen.addEventListener('click',()=>{bb.classList.remove('collapsed');bb.setAttribute('aria-hidden','false');try{localStorage.setItem(KEY,'open');}catch(e){}});
+  btnClose.addEventListener('click',()=>{bb.classList.add('collapsed');bb.setAttribute('aria-hidden','true');try{localStorage.setItem(KEY,'closed');}catch(e){}});
+})();
+</script>
+
+<button id="scrollTopBtn" title="Go to top"><i class="bi bi-arrow-up-short"></i></button>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  const scrollBtn=document.getElementById("scrollTopBtn");
+  window.onscroll=()=>{scrollBtn.style.display=(document.body.scrollTop>350||document.documentElement.scrollTop>350)?"flex":"none";};
+  scrollBtn.onclick=()=>window.scrollTo({top:0,behavior:"smooth"});
+</script>
+
+{# === Age Gate Modal include (global) === #}
+{% include "partials/age_gate_modal.html" %}
+
+{# === Age Gate Guard JS (submit anında, AJAX ile onay) === #}
+<script>
+  // Server durumu → JS boolean
+  window.ivGatePassed = {{ (session.get('gate_passed') or (request.cookies.get('age_ok') == '1')) | tojson }};
+  // Bekleyen formu burada tutacağız
+  window.__ivPendingForm = null;
+
+  document.addEventListener('DOMContentLoaded', function(){
+    const ageModalEl = document.getElementById('ivAgeGateModal');
+    if (!ageModalEl) return;
+
+    const ensureModal = () => new bootstrap.Modal(ageModalEl, { backdrop:'static', keyboard:false });
+
+    // 1) Form submit guard: gate yoksa submit'i durdurup modalı aç
+    const guardForms = document.querySelectorAll('form[data-requires-age-gate="1"]');
+    guardForms.forEach(function(f){
+      f.addEventListener('submit', function(ev){
+        if (!window.ivGatePassed) {
+          ev.preventDefault();
+          window.__ivPendingForm = f; // Onaydan sonra aynen devam edeceğiz
+          try {
+            const nextInput = ageModalEl.querySelector('input[name="next"]');
+            if (nextInput) nextInput.value = window.location.href;
+          } catch(e){}
+          ensureModal().show();
+        }
+      }, { capture: true });
+    });
+  });
+</script>
+
+</body>
+</html>

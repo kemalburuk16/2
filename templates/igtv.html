@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Download Instagram IGTV Free | InstaVido') }}{% endblock %}
+{% block meta_desc %}{{ _('Download any Instagram IGTV video from public profiles in high quality. Fast, free and no watermark. Paste your Instagram IGTV link and start downloading instantly!') }}{% endblock %}
+
+{% block header %}
+<div class="index-hero px-0" style="
+    background: linear-gradient(125deg,#55f 0%,#2df5d6 33%,#e17ef9 66%,#f991bf 100%);
+    min-height: 370px;
+    border-radius: 0 0 2.3rem 2.3rem;
+    box-shadow: 0 0px 0px #7c43b522, 0 1px 0 #fff4 inset;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    width:100%; max-width:100%;
+">
+    <div class="mt-3 mb-2 w-100 d-flex justify-content-center">
+        <img src="/static/logo3.png" alt="InstaVido Logo" class="index-logo"
+            style="max-width:500px; width:34vw; min-width:170px; height:auto; filter: drop-shadow(0 7px 28px #6f47ffcc);">
+    </div>
+    <div class="text-center mb-3 w-100 d-flex flex-column align-items-center">
+        <h1 class="fw-bold text-white lh-sm" style="font-size:2.35rem; text-shadow: 0 1px 16px #0003;">
+            {{ _('Download Instagram IGTV for Free!') }}
+        </h1>
+    </div>
+{% set action_url = url_for('index', lang=lang if lang else get_locale()) %}
+{% set placeholder = _('Paste your IGTV video link here...') %}
+{% set ad_text = '' %}
+{% include "form.html" %}
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function(){
+            const pasteBtn = document.getElementById('pasteBtn');
+            const input = document.getElementById('instagram_url');
+            if (navigator.clipboard) {
+                pasteBtn.onclick = function(e) {
+                    navigator.clipboard.readText().then(txt => {
+                        input.value = txt;
+                        input.focus();
+                    });
+                };
+            } else {
+                pasteBtn.disabled = true;
+            }
+        });
+    </script>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<section class="container my-5">
+  <h2 class="text-center fw-bold mb-5" style="color:#7e39d1; font-size:2.2rem; letter-spacing:1px;">
+    📺 {{ _('How to Download IGTV Videos from Instagram?') }}
+  </h2>
+
+  <div class="row text-center gy-5">
+    
+    <!-- Step 1 -->
+    <div class="col-md-4">
+      <div class="display-3 mb-3">🔗</div>
+      <h3 class="h5 fw-bold mb-2">{{ _('Copy the IGTV Video Link') }}</h3>
+      <p class="text-muted mb-0">
+        {{ _('Open Instagram and go to the IGTV video you want to download. Tap the three-dot menu (⋯) and select') }} <strong>{{ _('“Copy Link”') }}</strong> {{ _('to get the video URL.') }}
+      </p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="col-md-4">
+      <div class="display-3 mb-3">📥</div>
+      <h3 class="h5 fw-bold mb-2">{{ _('Paste the Link into InstaVido') }}</h3>
+      <p class="text-muted mb-0">
+        {{ _('Go to') }} <strong>InstaVido.com/igtv</strong>, {{ _('paste the copied IGTV link into the search bar at the top of the page, then click the') }} <strong>{{ _('Download') }}</strong> {{ _('button.') }}
+      </p>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="col-md-4">
+      <div class="display-3 mb-3">✅</div>
+      <h3 class="h5 fw-bold mb-2">{{ _('Download the IGTV Video') }}</h3>
+      <p class="text-muted mb-0">
+        {{ _('Your IGTV video will be processed and available to download in high quality. No watermark, no sign-up, just fast and secure downloads — completely free.') }}
+      </p>
+    </div>
+
+  </div>
+</section>
+
+<section class="container my-5">
+  <div class="row align-items-center">
+
+    <!-- Sol: Görsel -->
+    <div class="col-md-6 text-center mb-4 mb-md-0">
+      <img src="/static/feature_igtv.png" alt="{{ _('What is IGTV?') }}" class="img-fluid rounded shadow-lg" style="max-height:400px;">
+    </div>
+
+    <!-- Sağ: Metin -->
+    <div class="col-md-6">
+      <h2 class="fw-bold mb-3" style="color:#7e39d1;">📺 {{ _('What is IGTV?') }}</h2>
+      <p class="text-muted fs-5">
+        {{ _('IGTV (Instagram TV) is a long-form video feature created by Instagram for sharing videos longer than 60 seconds. Unlike regular posts, IGTV supports vertical or full-screen videos and is perfect for tutorials, interviews, and creative storytelling. It\'s designed to keep users engaged and entertained without time limits, directly within the Instagram app. IGTV content is also accessible via its own tab or on the creator\'s profile.') }}
+      </p>
+    </div>
+
+  </div>
+</section>
+
+<section class="container my-5">
+  <h2 class="text-center fw-bold mb-5" style="color:#7e39d1;">
+    ❓ {{ _('Frequently Asked Questions – IGTV Downloader') }}
+  </h2>
+
+  <div class="accordion" id="igtvFaqAccordion">
+
+    <!-- 1 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="igtvQ1">
+        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#igtvA1">
+          1. {{ _('What is IGTV on Instagram?') }}
+        </button>
+      </h2>
+      <div id="igtvA1" class="accordion-collapse collapse show" data-bs-parent="#igtvFaqAccordion">
+        <div class="accordion-body">
+          {{ _('IGTV (Instagram TV) is a feature for sharing long-form videos on Instagram. It allows creators to upload full-screen, high-quality content over 1 minute long.') }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 2 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="igtvQ2">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#igtvA2">
+          2. {{ _('Where can I find IGTV videos on Instagram?') }}
+        </button>
+      </h2>
+      <div id="igtvA2" class="accordion-collapse collapse" data-bs-parent="#igtvFaqAccordion">
+        <div class="accordion-body">
+          {{ _('IGTV videos can be found in a creator’s profile under the IGTV tab or through Instagram\'s Explore section. They usually feature tutorials, shows, or vlogs.') }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="igtvQ3">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#igtvA3">
+          3. {{ _('How do I download an IGTV video with InstaVido?') }}
+        </button>
+      </h2>
+      <div id="igtvA3" class="accordion-collapse collapse" data-bs-parent="#igtvFaqAccordion">
+        <div class="accordion-body">
+          {{ _('Copy the link of the IGTV video, paste it into the box at InstaVido.com/igtv, and click download. The video will be ready to save in high quality in seconds.') }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="igtvQ4">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#igtvA4">
+          4. {{ _('Do I need to log in or install an app to download IGTV?') }}
+        </button>
+      </h2>
+      <div id="igtvA4" class="accordion-collapse collapse" data-bs-parent="#igtvFaqAccordion">
+        <div class="accordion-body">
+          {{ _('No account or app is needed. InstaVido works directly in your browser. Paste the link and download IGTV videos instantly — no installation, no sign-up required.') }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 5 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="igtvQ5">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#igtvA5">
+          5. {{ _('Can I download private IGTV videos?') }}
+        </button>
+      </h2>
+      <div id="igtvA5" class="accordion-collapse collapse" data-bs-parent="#igtvFaqAccordion">
+        <div class="accordion-body">
+          {{ _('No. InstaVido only supports public IGTV content. If the video belongs to a private account, it won’t be accessible or downloadable for privacy reasons.') }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 6 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="igtvQ6">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#igtvA6">
+          6. {{ _('Are IGTV downloads watermark-free and HD?') }}
+        </button>
+      </h2>
+      <div id="igtvA6" class="accordion-collapse collapse" data-bs-parent="#igtvFaqAccordion">
+        <div class="accordion-body">
+          {{ _('Yes! InstaVido delivers IGTV videos in their original quality with no watermark. You get the clean source file as posted, in the highest resolution available.') }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 7 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="igtvQ7">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#igtvA7">
+          7. {{ _('Is InstaVido safe and free for IGTV downloading?') }}
+        </button>
+      </h2>
+      <div id="igtvA7" class="accordion-collapse collapse" data-bs-parent="#igtvFaqAccordion">
+        <div class="accordion-body">
+          {{ _('Absolutely. InstaVido is a free, no-login, browser-based tool that ensures privacy and fast downloading. It doesn’t track you or require any software.') }}
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,1069 @@
+# app.py
+from seo_instavido.seo_utils import get_meta
+from adminpanel.views import admin_bp
+import adminpanel  # admin_bp ve tüm admin route'larını yükler (views, ads_views)
+import hmac, hashlib, base64, os, re, json, time, io, logging, requests
+from urllib.parse import urlparse, urljoin, quote, urlencode
+import socket, ipaddress
+from typing import Optional, Dict, Any, Tuple, List
+from session_logger import log_session_use, notify_download, update_session_counters
+from flask import (
+    Flask, render_template, request, redirect,
+    url_for, session, Response, send_file, jsonify
+)
+from flask_session import Session
+from flask_babelex import Babel, _
+from adminpanel.blacklist_admin import blacklist_admin_bp
+
+# --- ENTEGRE --- #
+from session_logger import log_session_use, notify_download
+
+# ============================================================================#
+#                              Proxy / Signature                              #
+# ============================================================================#
+IMG_PROXY_SECRET   = os.getenv("IMG_PROXY_SECRET", "").strip()
+MEDIA_PROXY_SECRET = os.getenv("MEDIA_PROXY_SECRET", "").strip()
+
+def _b64(s: bytes) -> str:
+    return base64.urlsafe_b64encode(s).decode().rstrip("=")
+
+def _ub64(s: str) -> bytes:
+    s = s + "=" * (-len(s) % 4)
+    return base64.urlsafe_b64decode(s.encode())
+
+def _sign_payload(secret: str, payload: str) -> str:
+    return _b64(hmac.new(secret.encode(), payload.encode(), hashlib.sha256).digest())
+
+def sign_img_proxy(url: str, ttl_sec: int = 900) -> str:
+    """
+    <img src="/img_proxy?..."> için imzalı URL üretir: url, exp, nonce, sig
+    """
+    if not IMG_PROXY_SECRET:
+        # dev modda doğrudan kullan; prod’da mutlaka env ver
+        return f"/img_proxy?url={quote(url)}"
+    exp = str(int(time.time()) + ttl_sec)
+    nonce = _b64(os.urandom(8))
+    payload = f"url={url}&exp={exp}&nonce={nonce}"
+    sig = _sign_payload(IMG_PROXY_SECRET, payload)
+    qs = urlencode({"url": url, "exp": exp, "nonce": nonce, "sig": sig})
+    return f"/img_proxy?{qs}"
+
+def sign_media_proxy(url: str, fn: str = "instavido", ttl_sec: int = 900) -> str:
+    """
+    /proxy_download için imzalı URL üretir: url, fn, exp, nonce, sig
+    """
+    if not MEDIA_PROXY_SECRET:
+        return f"/proxy_download?url={quote(url)}&fn={quote(fn)}"
+    exp = str(int(time.time()) + ttl_sec)
+    nonce = _b64(os.urandom(8))
+    payload = f"url={url}&fn={fn}&exp={exp}&nonce={nonce}"
+    sig = _sign_payload(MEDIA_PROXY_SECRET, payload)
+    qs = urlencode({"url": url, "fn": fn, "exp": exp, "nonce": nonce, "sig": sig})
+    return f"/proxy_download?{qs}"
+
+ALLOWED_REFERERS   = ("instavido.com", "www.instavido.com")
+def _has_allowed_referer(req) -> bool:
+    ref = (req.headers.get("Referer") or "").lower()
+    return any(h in ref for h in ALLOWED_REFERERS)
+
+# ===================== Güvenlik & reCAPTCHA & Limitler =====================
+RECAPTCHA_SITE_KEY = os.getenv("RECAPTCHA_SITE_KEY", "").strip()
+RECAPTCHA_SECRET   = os.getenv("RECAPTCHA_SECRET", "").strip()
+
+RATE_FILE = "/var/www/instavido/.rate_limits.json"
+os.makedirs(os.path.dirname(RATE_FILE), exist_ok=True)
+if not os.path.exists(RATE_FILE):
+    with open(RATE_FILE, "w") as f:
+        json.dump({}, f)
+
+class SimpleLimiter:
+    """
+    Dakika başına max ve burst limiti uygular.
+    Döner: (allowed: bool, need_captcha: bool)
+    """
+    def __init__(self, window_seconds=60, max_requests=60, burst=80):
+        self.window = window_seconds
+        self.max = max_requests
+        self.burst = burst
+
+    def hit(self, key: str):
+        now = int(time.time())
+        try:
+            with open(RATE_FILE, "r+") as f:
+                data = json.load(f)
+                arr = data.get(key, [])
+                arr = [t for t in arr if t > now - self.window]
+                arr.append(now)
+                data[key] = arr
+                f.seek(0)
+                json.dump(data, f)
+                f.truncate()
+            count = len(arr)
+            if count > self.burst:
+                return (False, True)   # captcha duvarı
+            if count > self.max:
+                return (False, False)  # kısa blok
+            return (True, False)
+        except Exception:
+            return (True, False)
+
+limiter = SimpleLimiter(window_seconds=60, max_requests=60, burst=80)
+
+# Kara liste dosyası
+BLACKLIST_PATH = "/var/www/instavido/adminpanel/data/blacklist.json"
+
+def _load_blacklist():
+    if not os.path.exists(BLACKLIST_PATH):
+        return {"profiles": [], "links": []}
+    try:
+        with open(BLACKLIST_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {"profiles": [], "links": []}
+
+def _norm(s: str) -> str:
+    return re.sub(r"\s+", " ", (s or "").strip().lower())
+
+def _is_blocked(target: str) -> bool:
+    if not target:
+        return False
+    bl = _load_blacklist()
+    t = _norm(target)
+    profs = [_norm(x) for x in bl.get("profiles", [])]
+    links  = [_norm(x) for x in bl.get("links", [])]
+    return t in profs or t in links
+
+def _recaptcha_verify(token: str, remote_ip: str) -> bool:
+    if not (RECAPTCHA_SECRET and token):
+        return False
+    try:
+        r = requests.post(
+            "https://www.google.com/recaptcha/api/siteverify",
+            data={"secret": RECAPTCHA_SECRET, "response": token, "remoteip": remote_ip},
+            timeout=10
+        )
+        j = r.json()
+        return bool(j.get("success"))
+    except Exception:
+        return False
+
+def _ensure_gate(lang):
+    if not session.get("gate_passed"):
+        if not request.path.startswith(f"/{lang}/gate"):
+            nxt = request.url
+            return redirect(url_for("gate", lang=lang, next=nxt))
+    return None
+
+def _ensure_not_blacklisted():
+    target = session.get("last_target", "")
+    if _is_blocked(target):
+        return render_template("policies/blocked.html", target=target), 200
+    return None
+
+def _enforce_rate_limit(suffix=""):
+    now = time.time()
+    if session.get("captcha_ok_until", 0) > now:
+        return None
+    ip  = (request.headers.get("X-Forwarded-For", request.remote_addr) or "0.0.0.0").split(",")[0].strip()
+    key = f"ip:{ip}{suffix}"
+    allowed, need_captcha = limiter.hit(key)
+    if allowed:
+        return None
+    if need_captcha:
+        return render_template("policies/captcha_wall.html", sitekey=RECAPTCHA_SITE_KEY), 429
+    return (_("Too many requests. Please slow down."), 429)
+
+# =============================================================================
+
+# ---- Sabitler --------------------------------------------------------------
+BASE_DIR      = os.path.dirname(os.path.abspath(__file__))
+BLOCKED_COOKIES_PATH = os.path.join(BASE_DIR, "blocked_cookies.json")
+SESSION_IDX_PATH = os.path.join(BASE_DIR, "session_index.txt")
+SESSIONS_PATH = os.path.join(BASE_DIR, "sessions.json")
+SESSION_DIR   = os.path.join(BASE_DIR, ".flask_session")
+IG_APP_ID     = "1217981644879628"
+UA_MOBILE     = "Instagram 298.0.0.0.0 Android"
+UA_DESKTOP    = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                 "(KHTML, like Gecko) Chrome/124.0 Safari/537.36")
+
+# ---- Flask & Babel ---------------------------------------------------------
+app = Flask(__name__)
+# --- Proxy imzalama fonksiyonlarını Jinja'ya tanıt ---
+
+app.secret_key = 'instavido-süper-gizli-key-2024'
+app.config.update(
+    SESSION_TYPE        = "filesystem",
+    SESSION_FILE_DIR    = SESSION_DIR,
+    SESSION_PERMANENT   = True,
+    SESSION_USE_SIGNER  = True,
+    SESSION_COOKIE_NAME = "instavido_session",
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+)
+
+app.jinja_env.globals.update(
+    sign_img_proxy=sign_img_proxy,
+    sign_media_proxy=sign_media_proxy,
+)
+
+os.makedirs(SESSION_DIR, exist_ok=True)
+Session(app)
+app.url_map.strict_slashes = False
+
+# --- Ads runtime (server-side fallback) ---
+try:
+    from ads_manager import ad_html as _ad_func
+    app.jinja_env.globals.update(ad_html=_ad_func, get_ad=_ad_func)
+except Exception:
+    pass
+
+# Logging
+logging.basicConfig(level=logging.INFO)
+app.logger.setLevel(logging.DEBUG)
+
+app.config['BABEL_DEFAULT_LOCALE'] = 'en'
+app.config['BABEL_TRANSLATION_DIRECTORIES'] = os.path.join(BASE_DIR, "translations")
+babel = Babel(app)
+LANGUAGES = ['en', 'tr', 'hi', 'de', 'fr', 'ko', 'ar', 'es']
+app.jinja_env.globals.update(LANGUAGES=LANGUAGES)
+
+# --------------------------------------------------------------------------- #
+#  DİL SEÇİMİ                                                                 #
+# --------------------------------------------------------------------------- #
+@babel.localeselector
+def get_locale():
+    segments = request.path.strip('/').split('/')
+    if segments and segments[0] in LANGUAGES:
+        return segments[0]
+    if request.view_args and 'lang' in request.view_args and request.view_args['lang'] in LANGUAGES:
+        return request.view_args['lang']
+    if request.args.get('lang') in LANGUAGES:
+        return request.args.get('lang')
+    return 'en'
+
+# --- DİL VE META, MENÜ, OTOMATİK SEO CONTEXT ---
+PAGE_ROUTES = [
+    ('index', 'index.html'),
+    ('video', 'video.html'),
+    ('photo', 'photo.html'),
+    ('reels', 'reels.html'),
+    ('igtv', 'igtv.html'),
+    ('story', 'story.html'),
+    ('privacy', 'privacy.html'),
+    ('terms', 'terms.html'),
+    ('contact', 'contact.html'),
+]
+
+@app.context_processor
+def inject_globals():
+    lang = get_locale()
+    try:
+        page = request.endpoint if request.endpoint in dict(PAGE_ROUTES) else "index"
+        meta = get_meta(page, lang)
+    except Exception:
+        meta = {}
+    nav_links = [
+        {
+            'endpoint': page,
+            'url': url_for(page, lang=lang),
+            'name': _(page.capitalize())
+        }
+        for page, tmpl in PAGE_ROUTES
+        if page not in ('privacy', 'terms', 'contact')
+    ]
+    return dict(meta=meta,
+                nav_links=nav_links,
+                get_locale=get_locale,
+                LANGUAGES=LANGUAGES,
+                RECAPTCHA_SITE_KEY=RECAPTCHA_SITE_KEY)
+
+# >>> MEDIA STATE TEMİZLEYİCİ
+def _clear_media_state():
+    for k in [
+        "video_url","image_urls","thumbnail_url","raw_comments","video_title",
+        "stories","username",
+        "from_story","from_idx","from_video","from_fotograf","from_reels","from_igtv","from_load",
+        "download_error"
+    ]:
+        session.pop(k, None)
+
+@app.before_request
+def _refresh():
+    session.permanent = True
+    now  = time.time()
+    last = session.get("last", now)
+    if now - last > 900:
+        session.clear()
+    session["last"] = now
+    try:
+        if request.cookies.get("age_ok") == "1":
+            session["gate_passed"] = True
+    except Exception:
+        pass
+
+# ----------------------------- Gate Route ------------------------------
+@app.route("/<lang>/gate", methods=["GET","POST"])
+def gate(lang):
+    nxt = request.args.get("next") or request.form.get("next") or url_for("index", lang=lang)
+    if request.method == "POST":
+        if request.form.get("age13") == "on" and request.form.get("terms") == "on":
+            session["gate_passed"] = True
+            resp = redirect(nxt)
+            try:
+                resp.set_cookie(
+                    "age_ok", "1",
+                    max_age=60*60*24*365,
+                    secure=True,
+                    samesite="Lax"
+                )
+            except Exception:
+                pass
+            return resp
+    return render_template("policies/gate.html", lang=lang, next=nxt)
+
+# ------------------------- reCAPTCHA Doğrulama -------------------------
+@app.route("/captcha/verify", methods=["POST"])
+def captcha_verify():
+    token = request.form.get("g-recaptcha-response", "") or request.form.get("recaptcha_token", "")
+    ip = (request.headers.get("X-Forwarded-For", request.remote_addr) or "").split(",")[0].strip()
+    if RECAPTCHA_SECRET and _recaptcha_verify(token, ip):
+        session["captcha_ok_until"] = time.time() + 60*30
+        nxt = request.form.get("next") or url_for("index", lang=get_locale())
+        return redirect(nxt)
+    return render_template("policies/captcha_wall.html", sitekey=RECAPTCHA_SITE_KEY), 400
+
+# --------------------------------------------------------------------------- #
+#  Yardımcılar                                                                #
+# --------------------------------------------------------------------------- #
+def block_session(sessionid, duration_sec=1800):
+    now = time.time()
+    blocked_until = now + duration_sec
+    entry = {"sessionid": sessionid, "blocked_until": blocked_until}
+    lst = []
+    if os.path.exists(BLOCKED_COOKIES_PATH):
+        with open(BLOCKED_COOKIES_PATH, encoding="utf-8") as f:
+            try:
+                lst = json.load(f)
+            except:
+                lst = []
+    lst = [b for b in lst if b.get("blocked_until", 0) > now]
+    if sessionid not in [b.get("sessionid") for b in lst]:
+        lst.append(entry)
+    with open(BLOCKED_COOKIES_PATH, "w", encoding="utf-8") as f:
+        json.dump(lst, f, indent=2)
+
+def _cookie_pool():
+    if not os.path.exists(SESSIONS_PATH):
+        return []
+    with open(SESSIONS_PATH, encoding="utf-8") as f:
+        sessions = json.load(f)
+    blocked_ids = set()
+    now = time.time()
+    if os.path.exists(BLOCKED_COOKIES_PATH):
+        with open(BLOCKED_COOKIES_PATH, encoding="utf-8") as f:
+            for entry in json.load(f):
+                if entry.get("blocked_until", 0) > now:
+                    blocked_ids.add(entry.get("sessionid"))
+    pool = [
+        s for s in sessions
+        if s.get("status", "active") == "active"
+        and s.get("sessionid") not in blocked_ids
+        and s.get("session_key") is not None
+    ]
+    pool.sort(key=lambda s: int(s["session_key"]))
+    return pool
+
+def get_next_session():
+    pool = _cookie_pool()
+    if not pool:
+        return None
+    idx = 0
+    if os.path.exists(SESSION_IDX_PATH):
+        try:
+            with open(SESSION_IDX_PATH, "r") as f:
+                idx = int(f.read().strip())
+        except Exception:
+            idx = 0
+    idx = (idx + 1) % len(pool)
+    with open(SESSION_IDX_PATH, "w") as f:
+        f.write(str(idx))
+    return pool[idx]
+
+def _build_headers(extra: Optional[Dict[str, str]] = None, html: bool=False) -> Dict[str, str]:
+    h = {
+        "User-Agent": UA_DESKTOP if html else UA_MOBILE,
+        "X-IG-App-ID": IG_APP_ID if not html else "936619743392459",
+        "Accept": "*/*",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Referer": "https://www.instagram.com/"
+    }
+    if html:
+        h.pop("X-IG-App-ID", None)
+        h["Sec-Fetch-Mode"] = "navigate"
+        h["Sec-Fetch-Dest"] = "document"
+    if extra: h.update(extra)
+    return h
+
+def _http_get(url: str, cookies: Optional[Dict[str, str]]=None, html: bool=False, timeout: int=12):
+    return requests.get(url, headers=_build_headers(html=html), cookies=cookies or {}, timeout=timeout)
+
+# --------------------------------------------------------------------------- #
+#  PROFILE Yardımcıları                                                       #
+# --------------------------------------------------------------------------- #
+def _parse_username_or_url(s: str) -> Optional[str]:
+    if not s:
+        return None
+    s = s.strip()
+    m = re.search(r"(?:instagram\.com|instagr\.am)/([A-Za-z0-9_.]+)(?:/)?$", s)
+    if m:
+        return m.group(1)
+    if re.fullmatch(r"[A-Za-z0-9_.]{2,30}", s):
+        return s
+    return None
+
+def _extract_video_url_from_gql(j: dict) -> Optional[str]:
+    info = (
+        j.get("data", {}).get("xdt_shortcode_media")
+        or j.get("data", {}).get("shortcode_media") or {}
+    )
+    if not info:
+        return None
+
+    if (info.get("__typename", "").lower().endswith("video")):
+        return (info.get("video_url")
+                or (info.get("video_resources") or [{}])[0].get("src"))
+
+    if "sidecar" in (info.get("__typename", "").lower()):
+        for edge in info.get("edge_sidecar_to_children", {}).get("edges", []):
+            node = edge.get("node", {})
+            if node.get("__typename", "").lower().endswith("video"):
+                return (node.get("video_url")
+                        or (node.get("video_resources") or [{}])[0].get("src"))
+    return None
+
+def _extract_object_from(text: str, key: str) -> Optional[dict]:
+    """
+    text içinde '"<key>":{' veya '[' ile başlayan JSON’u
+    parantez sayarak güvenli çıkarır. Döner: { key: ... } sözlüğü.
+    """
+    try:
+        anchor = f'"{key}":'
+        i = text.find(anchor)
+        if i == -1:
+            return None
+        j = i + len(anchor)
+        while j < len(text) and text[j] not in "{[":
+            j += 1
+        if j >= len(text):
+            return None
+        open_char = text[j]
+        close_char = "}" if open_char == "{" else "]"
+        depth, k = 0, j
+        while k < len(text):
+            c = text[k]
+            if c == open_char:
+                depth += 1
+            elif c == close_char:
+                depth -= 1
+                if depth == 0:
+                    blob = text[i:k+1]  # '"key":{...}' veya '"key":[...]'
+                    js = "{" + blob + "}"
+                    js = js.replace("\\u0026", "&").replace("\\/", "/")
+                    return json.loads(js)
+            k += 1
+        return None
+    except Exception as ex:
+        logging.exception(f"_extract_object_from error: {ex}")
+        return None
+
+def _profile_html_fallback(username: str):
+    """
+    Cookie yoksa: https://www.instagram.com/<username>/ HTML’inden
+    edge_owner_to_timeline_media’yı brace‑count ile çek.
+    Döner: (profile_dict, posts_list, reels_list)
+    """
+    try:
+        url = f"https://www.instagram.com/{username}/"
+        r = _http_get(url, html=True)
+        if r.status_code != 200:
+            return None, [], []
+
+        html = r.text
+
+        avatar = None
+        mava = re.search(r'"profile_pic_url_hd"\s*:\s*"([^"]+)"', html)
+        if mava:
+            avatar = mava.group(1).encode('utf-8').decode('unicode_escape')
+
+        obj = _extract_object_from(html, "edge_owner_to_timeline_media")
+        if not obj:
+            return None, [], []
+
+        media = obj.get("edge_owner_to_timeline_media", {})
+        edges = (media.get("edges") or [])[:24]
+
+        posts, reels = [], []
+        for e in edges:
+            node = (e or {}).get("node", {}) or {}
+            is_video = bool(node.get("is_video"))
+            display = node.get("display_url") or node.get("thumbnail_src") or ""
+            caption = ""
+            try:
+                cap_edges = (node.get("edge_media_to_caption", {}).get("edges") or [])
+                if cap_edges:
+                    caption = (cap_edges[0].get("node", {}) or {}).get("text", "")
+            except Exception:
+                pass
+
+            likes = (
+                (node.get("edge_liked_by", {}) or {}).get("count")
+                or (node.get("edge_media_preview_like", {}) or {}).get("count")
+                or 0
+            )
+            comments = (node.get("edge_media_to_comment", {}) or {}).get("count", 0)
+            views = (node.get("video_view_count") if is_video else 0) or 0
+            ts = node.get("taken_at_timestamp") or 0
+
+            item = {
+                "type": "video" if is_video else "image",
+                "url": display,
+                "thumb": display,
+                "caption": (caption or "")[:160],
+                "download_url": display,
+                "like_count": int(likes or 0),
+                "comment_count": int(comments or 0),
+                "view_count": int(views or 0),
+                "timestamp": int(ts or 0)
+            }
+            posts.append(item)
+            if is_video:
+                reels.append(item)
+
+        profile = {
+            "username": username,
+            "full_name": "",
+            "avatar": avatar,
+            "followers": 0,
+            "following": 0,
+            "posts_count": len(posts),
+            "bio": "",
+            "external_url": f"https://instagram.com/{username}"
+        }
+
+        return (profile, posts, reels)
+    except Exception as ex:
+        logging.exception(f"_profile_html_fallback error for {username}: {ex}")
+        return None, [], []
+
+def _get_uid(username: str) -> Optional[str]:
+    url = f"https://i.instagram.com/api/v1/users/web_profile_info/?username={username}"
+    for s in _cookie_pool():
+        ck = {k: s.get(k, "") for k in ("sessionid", "ds_user_id", "csrftoken")}
+        try:
+            r = requests.get(url, headers=_build_headers(), cookies=ck, timeout=10)
+            if r.status_code == 200 and "user" in r.text:
+                return r.json()["data"]["user"]["id"]
+        except Exception:
+            continue
+    try:
+        r = _http_get(f"https://www.instagram.com/{username}/", html=True)
+        m = re.search(r'"profilePage_(\d+)"', r.text)
+        if m:
+            return m.group(1)
+    except Exception:
+        pass
+    return None
+
+def _normalize_post_item(it: dict) -> Optional[dict]:
+    """
+    Instagram 'feed/user' ya da 'clips/user' itemlerini tek tipe çevirir.
+    """
+    if not it:
+        return None
+
+    # carousel (sidecar)
+    if it.get("media_type") == 8 and it.get("carousel_media"):
+        first = it["carousel_media"][0]
+        if first.get("video_versions"):
+            u = first["video_versions"][0].get("url", "")
+            typ = "video"
+        else:
+            u = (first.get("image_versions2", {}).get("candidates") or [{}])[0].get("url", "")
+            typ = "image"
+        thumb = (first.get("image_versions2", {}).get("candidates") or [{}])[0].get("url", "") or u
+    else:
+        if it.get("video_versions"):
+            u = it["video_versions"][0].get("url", "")
+            typ = "video"
+        else:
+            u = (it.get("image_versions2", {}).get("candidates") or [{}])[0].get("url", "")
+            typ = "image"
+        thumb = (it.get("image_versions2", {}).get("candidates") or [{}])[0].get("url", "") or u
+
+    cap_txt = ""
+    try:
+        cap = it.get("caption") or {}
+        cap_txt = (cap.get("text") or "").strip()
+    except Exception:
+        pass
+
+    like_count = it.get("like_count") or it.get("like_and_view_counts_disabled") and 0 or it.get("play_count") or 0
+    comment_count = it.get("comment_count") or 0
+    view_count = it.get("view_count") or it.get("play_count") or (like_count if typ == "video" else 0)
+    ts = it.get("taken_at") or 0
+
+    return {
+        "type": typ,
+        "url": u,
+        "thumb": thumb,
+        "caption": (cap_txt or "")[:160],
+        "download_url": u,
+        "like_count": int(like_count or 0),
+        "comment_count": int(comment_count or 0),
+        "view_count": int(view_count or 0),
+        "timestamp": int(ts or 0)
+    }
+
+# ==== Profile pagination state (per visitor, per profile) ====================
+def _pf_key(username: str, kind: str) -> str:
+    return f"pf::{username}::{kind}"  # kind = feed | reels | highlights
+
+def _pf_get(username: str, kind: str):
+    return session.get(_pf_key(username, kind)) or {}
+
+def _pf_set(username: str, kind: str, data: dict):
+    session[_pf_key(username, kind)] = data
+
+def _find_session_by_key(sk: str):
+    if not sk: return None
+    for s in _cookie_pool():
+        if s.get("session_key") == sk:
+            return s
+    return None
+
+# >>> NEW: Private API JSON GET + user feed & reels fetchers
+def _api_json(url: str, s: dict, timeout: int = 12) -> Optional[dict]:
+    """
+    200 olsa da IG bazen {"status":"fail","message":"login_required"} döner.
+    Bunu AUTH hatası sayarız. 401/403 veya login_required/checkpoint'te block; 429/5xx'te blok yok.
+    """
+    ck = {
+        "sessionid":  s.get("sessionid", ""),
+        "ds_user_id": s.get("ds_user_id", ""),
+        "csrftoken":  s.get("csrftoken", "")
+    }
+    try:
+        r = requests.get(url, headers=_build_headers(), cookies=ck, timeout=timeout)
+        ctype = (r.headers.get("Content-Type","") or "").lower()
+
+        if r.status_code == 200 and "application/json" in ctype:
+            j = r.json() or {}
+            if (j.get("status") == "fail") or (j.get("message") in ("login_required", "checkpoint_challenge_required")):
+                msg = j.get("message","")
+                if msg in ("login_required", "checkpoint_challenge_required"):
+                    block_session(ck["sessionid"])
+                    app.logger.warning(f"_api_json AUTH fail(200) block user={s.get('user')} url={url} msg={msg}")
+                else:
+                    app.logger.warning(f"_api_json fail(200) user={s.get('user')} url={url} msg={msg}")
+                return None
+            return j
+
+        if r.status_code in (401, 403):
+            block_session(ck["sessionid"])
+            app.logger.warning(f"_api_json AUTH block user={s.get('user')} status={r.status_code} url={url}")
+        else:
+            app.logger.warning(f"_api_json non-200 user={s.get('user')} status={r.status_code} url={url}")
+        return None
+
+    except Exception as e:
+        app.logger.error(f"_api_json exc user={s.get('user')} url={url} err={e}")
+        return None
+
+# ==== PAGED HELPERS (single page fetchers) ==================================
+def _fetch_user_feed_page(uid: str, s: dict, max_id: Optional[str] = None, count: int = 12):
+    """
+    Önce /feed/user/{uid}/, olmazsa /users/{uid}/feed/ dener ve
+    dönen öğeleri _normalize_post_item ile grid formatına çevirir.
+    """
+    def _norm_items(items):
+        out = []
+        for it in (items or []):
+            n = _normalize_post_item(it)
+            if n:
+                out.append(n)
+        return out
+
+    # 1) feed/user
+    url1 = f"https://i.instagram.com/api/v1/feed/user/{uid}/?count={count}"
+    if max_id: url1 += f"&max_id={max_id}"
+    j = _api_json(url1, s)
+    if j:
+        items = _norm_items(j.get("items") or [])
+        next_max_id = j.get("next_max_id")
+        if items:
+            return items, next_max_id
+
+    # 2) users/{uid}/feed
+    url2 = f"https://i.instagram.com/api/v1/users/{uid}/feed/?count={count}"
+    if max_id: url2 += f"&max_id={max_id}"
+    j2 = _api_json(url2, s)
+    if j2:
+        items = _norm_items(j2.get("items") or [])
+        next_max_id = j2.get("next_max_id")
+        if items:
+            return items, next_max_id
+
+    return [], None
+
+def _fetch_user_reels_page(uid: str, s: dict, max_id: Optional[str] = None, page_size: int = 30):
+    """
+    Reels/Clips için çoklu şema + fallback.
+    1) /clips/user?target_user_id=...&page_size=...
+       -> items; paging_info.max_id | next_max_id | more_available
+    2) Yoksa /users/{uid}/clips/
+    3) Hâlâ az ise /feed/user/{uid}?count=50 -> product_type=='clips' filtrele
+    Döner: (normalized_items, next_max_id)
+    """
+    def _norm_list(lst):
+        out = []
+        for it in (lst or []):
+            media = it.get("media") or it.get("item") or it
+            n = _normalize_post_item(media)
+            if n and n["type"] == "video":
+                out.append(n)
+        return out
+
+    # 1) clips/user
+    url = f"https://i.instagram.com/api/v1/clips/user/?target_user_id={uid}&page_size={page_size}"
+    if max_id: url += f"&max_id={max_id}"
+    j = _api_json(url, s)
+    if j:
+        items = (j.get("items") or j.get("clips") or j.get("clip_items") or [])
+        arr = _norm_list(items)
+        nxt = (j.get("paging_info") or {}).get("max_id") or j.get("next_max_id")
+        if not nxt and (j.get("paging_info") or {}).get("more_available"):
+            nxt = (j.get("paging_info") or {}).get("max_id")
+        if arr:
+            return arr, nxt
+
+    # 2) users/{uid}/clips
+    url2 = f"https://i.instagram.com/api/v1/users/{uid}/clips/?page_size={page_size}"
+    if max_id: url2 += f"&max_id={max_id}"
+    j2 = _api_json(url2, s)
+    if j2:
+        items = (j2.get("items") or j2.get("clips") or j2.get("clip_items") or [])
+        arr = _norm_list(items)
+        nxt = (j2.get("paging_info") or {}).get("max_id") or j2.get("next_max_id")
+        if not nxt and (j2.get("paging_info") or {}).get("more_available"):
+            nxt = (j2.get("paging_info") or {}).get("max_id")
+        if arr:
+            return arr, nxt
+
+    # 3) fallback: feed/user'dan 'clips' filtrele
+    url3 = f"https://i.instagram.com/api/v1/feed/user/{uid}/?count=50"
+    if max_id: url3 += f"&max_id={max_id}"
+    j3 = _api_json(url3, s)
+    if j3:
+        filt = []
+        for it in (j3.get("items") or []):
+            if (it.get("product_type") or "").lower() == "clips":
+                n = _normalize_post_item(it)
+                if n and n["type"] == "video":
+                    filt.append(n)
+        nxt = j3.get("next_max_id")
+        if filt:
+            return filt, nxt
+
+    return [], None
+
+def _fetch_user_feed(uid: str, limit: int = 24) -> List[dict]:
+    """
+    Kullanıcının post (foto/video) akışını çeker: /api/v1/feed/user/{uid}/
+    """
+    pool = _cookie_pool()
+    if not pool or not uid:
+        return []
+
+    collected, max_id = [], None
+    for _ in range(3):
+        for s in pool:
+            base = f"https://i.instagram.com/api/v1/feed/user/{uid}/?count=12"
+            url = base + (f"&max_id={max_id}" if max_id else "")
+            j = _api_json(url, s)
+            if not j:
+                continue
+            items = j.get("items") or []
+            for it in items:
+                norm = _normalize_post_item(it)
+                if norm:
+                    collected.append(norm)
+                if len(collected) >= limit:
+                    return collected[:limit]
+            max_id = j.get("next_max_id")
+            if not max_id:
+                return collected[:limit]
+            break
+    return collected[:limit]
+
+def _fetch_user_reels(uid: str, limit: int = 24) -> List[dict]:
+    """
+    Kullanıcının Reels videolarını çeker.
+    """
+    pool = _cookie_pool()
+    if not pool or not uid:
+        return []
+
+    collected = []
+    next_max_id = None
+
+    for _ in range(3):
+        for s in pool:
+            base = f"https://i.instagram.com/api/v1/clips/user/?target_user_id={uid}&page_size=12"
+            url = base + (f"&max_id={next_max_id}" if next_max_id else "")
+            j = _api_json(url, s)
+            if not j:
+                continue
+
+            items = j.get("items") or j.get("clips") or j.get("clip_items") or []
+            for it in items:
+                media = it.get("media") or it.get("item") or it
+                norm = _normalize_post_item(media)
+                if norm and norm["type"] == "video":
+                    collected.append(norm)
+                if len(collected) >= limit:
+                    return collected[:limit]
+
+            next_max_id = j.get("paging_info", {}).get("max_id") or j.get("next_max_id")
+            if not next_max_id:
+                return collected[:limit]
+            break
+
+    return collected[:limit]
+
+def _get_profile_data(username: str):
+    """
+    Profil üst bilgileri + ilk medya sayfaları (post & reels) + stories + highlights.
+    """
+    uid = _get_uid(username)
+
+    user = None
+    profile = None
+    posts, reels, stories, highlights = [], [], [], []
+
+    # USER INFO
+    pool = _cookie_pool()
+    if pool:
+        try:
+            url = f"https://i.instagram.com/api/v1/users/web_profile_info/?username={username}"
+            for s in pool:
+                j = _api_json(url, s)
+                if j and j.get("data", {}).get("user"):
+                    user = j["data"]["user"]
+                    break
+        except Exception:
+            user = None
+
+    if user:
+        profile = {
+            "username": user.get("username"),
+            "full_name": user.get("full_name") or "",
+            "avatar": user.get("profile_pic_url_hd") or user.get("profile_pic_url"),
+            "followers": user.get("edge_followed_by", {}).get("count", 0),
+            "following": user.get("edge_follow", {}).get("count", 0),
+            "posts_count": user.get("edge_owner_to_timeline_media", {}).get("count", 0),
+            "bio": (user.get("biography") or "").strip(),
+            "external_url": user.get("external_url") or f"https://instagram.com/{user.get('username','')}"
+        }
+
+    # İlk sayfa: FEED & REELS (çalışan cookie'yi bul ve pinle)
+    if uid and pool:
+        # FEED
+        feed_items, feed_next, feed_sk = [], None, None
+        for s in pool:
+            try:
+                items, nxt = _fetch_user_feed_page(uid, s, max_id=None, count=12)
+                if items:
+                    feed_items, feed_next, feed_sk = items, nxt, s.get("session_key")
+                    break
+            except Exception:
+                continue
+        if feed_items:
+            posts = feed_items
+            _pf_set(username, "feed", {"session_key": feed_sk, "next_max_id": feed_next})
+        else:
+            _pf_set(username, "feed", {"session_key": None, "next_max_id": None})
+
+        # REELS
+        reels_items, reels_next, reels_sk = [], None, None
+        for s in pool:
+            try:
+                items, nxt = _fetch_user_reels_page(uid, s, max_id=None, page_size=12)
+                if items:
+                    reels_items, reels_next, reels_sk = items, nxt, s.get("session_key")
+                    break
+            except Exception:
+                continue
+        if reels_items:
+            reels = reels_items
+            _pf_set(username, "reels", {"session_key": reels_sk, "next_max_id": reels_next})
+        else:
+            _pf_set(username, "reels", {"session_key": None, "next_max_id": None})
+
+    # Fallback HTML (hala boşsa)
+    if not posts:
+        prof_fb, posts_fb, reels_fb = _profile_html_fallback(username)
+        if prof_fb and not profile:
+            profile = prof_fb
+        posts = posts or posts_fb
+        reels = reels or reels_fb
+
+    # STORIES
+    if uid:
+        st_raw, _sess = _get_stories(uid)
+        if st_raw:
+            for it in st_raw:
+                stories.append({
+                    "type": it.get("type"),
+                    "url": it.get("media_url"),
+                    "thumb": it.get("thumb"),
+                    "caption": ""
+                })
+
+    # HIGHLIGHTS
+    if uid:
+        highlights = _get_highlights(uid) or []
+
+    if not profile:
+        profile = {
+            "username": username,
+            "full_name": "",
+            "avatar": None,
+            "followers": 0,
+            "following": 0,
+            "posts_count": len(posts),
+            "bio": "",
+            "external_url": f"https://instagram.com/{username}"
+        }
+
+    sections = {
+        "posts": posts,
+        "stories": stories,
+        "highlights": highlights,
+        "reels": reels or [i for i in posts if i.get("type") == "video"]
+    }
+    return profile, sections
+
+# --------------------------------------------------------------------------- #
+#  STORY İşlevleri                                                            #
+# --------------------------------------------------------------------------- #
+def _get_stories(uid: str):
+    """
+    Kullanıcının aktif story'lerini çeker.
+    """
+    pool = _cookie_pool()
+    pool_len = len(pool)
+    if pool_len == 0 or not uid:
+        return None, None
+
+    endpoints = [
+        f"https://i.instagram.com/api/v1/feed/reels_media/?reel_ids={uid}",
+        f"https://i.instagram.com/api/v1/feed/user/{uid}/reel_media/"
+    ]
+
+    last_key = None
+    if os.path.exists(SESSION_IDX_PATH):
+        try:
+            with open(SESSION_IDX_PATH, "r") as f:
+                last_key = f.read().strip()
+        except Exception:
+            last_key = None
+
+    keys = [s.get("session_key") for s in pool]
+    idx = 0
+    if last_key and last_key in keys:
+        idx = (keys.index(last_key) + 1) % pool_len
+
+    for offset in range(pool_len):
+        real_idx = (idx + offset) % pool_len
+        s = pool[real_idx]
+        ck = {
+            "sessionid":  s.get("sessionid", ""),
+            "ds_user_id": s.get("ds_user_id", ""),
+            "csrftoken":  s.get("csrftoken", "")
+        }
+        headers = _build_headers({"X-CSRFToken": ck["csrftoken"]})
+
+        for url in endpoints:
+            try:
+                r = requests.get(url, headers=headers, cookies=ck, timeout=10)
+                if r.status_code == 200:
+                    j = r.json()
+                    items = []
+                    if "reels_media" in j:
+                        rm = (j.get("reels_media") or [])
+                        if rm:
+                            items = rm[0].get("items", []) or []
+                    else:
+                        items = j.get("items", []) or []
+
+                    if not items:
+                        continue
+
+                    stories = []
+                    for it in items:
+                        thumb = ""
+                        try:
+                            thumb = (it.get("image_versions2", {}).get("candidates") or [{}])[0].get("url", "")
+                        except Exception:
+                            thumb = ""
+
+                        if it.get("video_versions"):
+                            media_url = it["video_versions"][0].get("url", "")
+                            typ = "video"
+                        elif it.get("image_versions2"):
+                            media_url = (it.get("image_versions2", {}).get("candidates") or [{}])[0].get("url", "")
+                            typ = "image"
+                        else:
+                            continue
+
+                        stories.append({
+                            "media_url": media_url,
+                            "thumb": thumb,
+                            "type": typ
+                        })
+
+                    if stories:
+                        try:
+                            with open(SESSION_IDX_PATH, "w") as f:
+                                f.write(s.get("session_key", ""))
+                        except Exception:
+                            pass
+                        return stories, s
+
+                else:
+                    if r.status_code in (401, 403):
+                        block_session(ck["sessionid"])
+                        app.logger.error(
+                            f"Story session AUTH blocked: {s.get('user')} ({ck.get('sessionid')}) - Status: {r.status_code}"
+                        )
+                    else:
+                        app.logger.warning(
+                            f"Story session non-200: {s.get('user')} - Status: {r.status_code}"
+                        )
+
+            except Exception as e:
+                app.logger.error(
+                    f"Story session exception: {s.get('user')} ({ck.get('sessionid')}) - {str(e)}"
+                )
+
+    try:
+        if pool:
+            with open(SESSION_IDX_PATH, "w") as f:
+                next_idx = (idx + 1) % pool_len
+                f.write(pool[next_idx].get("session_key", ""))
+    except Exception:
+        pass
+    return None, None
+
+

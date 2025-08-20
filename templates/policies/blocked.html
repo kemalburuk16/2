@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="{{ get_locale() or 'en' }}">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ _('Content Unavailable') }} · InstaVido</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>body{font-family:system-ui; margin:0; background:#0e0e0e; color:#fff}
+  .card{max-width:820px;margin:10vh auto;background:#161616;border-radius:18px;padding:26px; text-align:center}
+  .muted{opacity:.8}
+  a{color:#7ad7ff;text-decoration:none}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>{{ _('Content Unavailable') }}</h2>
+    <p class="muted">{{ _('Due to a request by the relevant rights holders, downloading this content via our service is not available.') }}</p>
+    {% if target %}<p class="muted">{{ _('Requested target:') }} <strong>{{ target }}</strong></p>{% endif %}
+    <p><a href="{{ url_for('index', lang=get_locale()) }}">{{ _('Go home') }}</a></p>
+  </div>
+</body>
+</html>

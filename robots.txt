@@ -1,0 +1,10 @@
+User-agent: *
+Disallow: /srdr-proadmin
+Disallow: /static/
+Disallow: /venv/
+Disallow: /sessions.json
+Disallow: /__pycache__/
+Disallow: /adminpanel/
+
+# Sitemap belirtmek istersen:
+# Sitemap: https://instavido.com/sitemap.xml

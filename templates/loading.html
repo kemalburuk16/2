@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="{{ lang or 'en' }}">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ _('Your File is Being Prepared… · InstaVido') }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <noscript>
+    <meta http-equiv="refresh" content="4;url=/{{ lang }}/download">
+  </noscript>
+  <style>
+    html, body {
+      margin: 0; padding: 0;
+      width: 100vw; height: 100vh;
+      background: #0e0e0e;
+      color: #fff;
+      font-family: 'Segoe UI', 'Arial', sans-serif;
+      min-height: 100vh;
+      min-width: 100vw;
+      overflow: hidden;
+    }
+    .split-root {
+      width: 100vw; height: 100vh;
+      display: flex;
+      flex-direction: row;
+    }
+    .split-left, .split-right {
+      width: 50vw; height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+    .split-divider {
+      width: 4px;
+      height: 80vh;
+      min-height: 320px;
+      background: linear-gradient(to bottom, #f6f6f6 10%, #aaa 60%, #ddd 100%);
+      border-radius: 2px;
+      align-self: center;
+      margin: 0;
+      box-shadow: 0 0 16px #aaa9;
+    }
+    .loading-centerbox {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 40vh;
+      min-height: 240px;
+      width: 100%;
+      min-width: 180px;
+    }
+    .loading-anim {
+      width: 80px; height: 80px;
+      border: 10px solid #ff980055;
+      border-top: 10px solid #ff9000;
+      border-radius: 50%;
+      animation: spin 1.2s linear infinite;
+      margin-bottom: 2.2rem;
+      box-shadow: 0 0 28px #fdb63a22;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-info {
+      font-size: 2.0rem;
+      font-weight: 700;
+      color: #ffad42;
+      margin-bottom: 0.6rem;
+      text-align: center;
+      text-shadow: 0 2px 18px #1a110044;
+    }
+    .loading-sub {
+      font-size: 1.1rem;
+      color: #eaeaea;
+      margin-bottom: 0.7rem;
+      text-align: center;
+      opacity: 0.87;
+      font-weight: 400;
+    }
+    .ad-center {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 90%;
+      max-width: 340px;
+      min-height: 160px;
+      min-width: 200px;
+      background: #191919;
+      border-radius: 1.2rem;
+      color: #ccc;
+      font-size: 1.15rem;
+      border: 1.7px solid #333;
+      box-shadow: 0 2px 32px #0002;
+      text-align: center;
+    }
+
+    /* Hide divider on mobile */
+    @media (max-width: 900px) {
+      .split-root {
+        flex-direction: column;
+      }
+      .split-left, .split-right {
+        width: 100vw; height: 50vh;
+        min-height: 180px;
+      }
+      .split-divider {
+        display: none !important;
+      }
+      .loading-centerbox { height: 38vh; min-height: 150px; }
+    }
+    @media (max-width: 600px) {
+      .loading-anim { width: 56px; height: 56px; border-width: 7px; }
+      .loading-info { font-size: 1.2rem; }
+      .ad-center { min-width: unset; width: 98vw; font-size: 1.05rem; }
+      .loading-centerbox { height: 32vh; }
+    }
+  </style>
+</head>
+<body>
+  <div class="split-root">
+    <!-- Left (or Top): Loading animation + info -->
+    <div class="split-left">
+      <div class="loading-centerbox">
+        <div class="loading-anim"></div>
+        <div class="loading-info">{{ _('Your file is being prepared…') }}</div>
+        <div class="loading-sub">{{ _('Your media is being processed, please wait.') }}</div>
+      </div>
+    </div>
+    <div class="split-divider"></div>
+    <!-- Right (or Bottom): Ad -->
+    <div class="split-right">
+      <div class="ad-center">
+        [ Ad Area ]
+      </div>
+    </div>
+  </div>
+<script>
+    setTimeout(function() {
+      window.location.href = "{{ url_for('download', lang=lang) }}";
+    }, 4000);
+</script>
+</body>
+</html>

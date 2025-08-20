@@ -1,0 +1,66 @@
+{
+  "updated_at": 1754757526,
+  "interstitial": {
+    "enabled": true,
+    "min_after_first": 2,
+    "max_after_first": 5,
+    "cooldown_minutes": 30
+  },
+  "slots": {
+    "header_top": {
+      "active": true,
+      "label": "Header Üstü",
+      "html": "<div class='ad ad-header'>[Header Ad]</div>"
+    },
+    "below_header": {
+      "active": true,
+      "label": "Header Altı Geniş",
+      "html": "<div class='ad ad-below-header'>[Below Header Ad]</div>"
+    },
+    "sidebar_left": {
+      "active": false,
+      "label": "Sol Sidebar",
+      "html": "<div class='ad ad-left'>[Left Ad]</div>"
+    },
+    "sidebar_right": {
+      "active": true,
+      "label": "Sağ Sidebar",
+      "html": "<div class='ad ad-right'>[Right Ad]</div>"
+    },
+    "download_inline": {
+      "active": true,
+      "label": "Download İç İçi",
+      "html": "<div class='ad ad-inline'>[Inline Ad]</div>"
+    },
+    "modal_fullscreen": {
+      "active": true,
+      "label": "Tam Ekran Modal",
+      "html": "<div class='ad ad-modal'>[Fullscreen Interstitial]</div>"
+    },
+    "bottom_bar": {
+      "active": false,
+      "label": "Alt Sabit Çubuk",
+      "html": "<div>[Bottom Bar Ad]</div>"
+    },
+    "inline_ad": {
+      "active": false,
+      "label": "Yorum Arası",
+      "html": "<div>[Inline Ad]</div>"
+    },
+    "sticky_side": {
+      "active": false,
+      "label": "Yapışkan Sağ/Sol",
+      "html": "<div>[Sticky Side Ad]</div>"
+    },
+    "top_banner": {
+      "active": false,
+      "label": "Navbar Altı Banner",
+      "html": "<div>[Top Banner Ad]</div>"
+    },
+    "floating_button": {
+      "active": false,
+      "label": "Kayan Buton",
+      "html": "<button>[Open Ad]</button>"
+    }
+  }
+}

@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+{% block title %}{{ _('Download') }} · InstaVido{% endblock %}
+{% block meta_desc %}{{ _('Preview & download your Instagram media in original quality.') }}{% endblock %}
+
+{% block header %}
+<div class="w-100" style="background: linear-gradient(125deg,#55f 0%,#2df5d6 33%,#e17ef9 66%,#f991bf 100%); min-height: 80px; border-radius: 0 0 1.2rem 1.2rem;"></div>
+{% endblock %}
+
+{% block content %}
+<style>
+  .dl-topbar{
+    display:flex; align-items:center; justify-content:space-between; gap:10px; margin:.4rem 0 1rem 0;
+  }
+  .dl-topbar .btn-new{
+    background: linear-gradient(135deg, #6f47ff, #59c7f9);
+    color:#fff; border:0; border-radius: 999px; padding:10px 16px; font-weight:700;
+    box-shadow:0 6px 16px rgba(95,120,255,.28);
+  }
+  .dl-topbar .btn-new:hover{ transform: translateY(-1px); }
+
+  /* GRID */
+  .dl-grid{ display:grid; gap:14px; grid-template-columns: 1fr; }
+  @media (min-width:576px){ .dl-grid{ grid-template-columns: repeat(2, minmax(0,1fr)); } }
+  @media (min-width:992px){ .dl-grid{ grid-template-columns: repeat(3, minmax(0,1fr)); } }
+
+  .dl-card{ position:relative; border-radius:16px; overflow:hidden; background:#fff; box-shadow:0 8px 24px rgba(0,0,0,.08); display:flex; flex-direction:column; }
+  .dl-card.video{ grid-column: span 1; }
+  @media (min-width:576px){ .dl-card.video{ grid-column: span 2; } }
+  @media (min-width:992px){ .dl-card.video{ grid-column: span 3; } }
+
+  /* Animasyonlu arkaplan (video çerçevesi) */
+  .dl-thumb-outer{
+    position:relative; display:flex; align-items:center; justify-content:center; min-height:200px;
+    padding:8px; border-radius:16px; overflow:hidden;
+  }
+  .dl-thumb-outer.video{
+    background: linear-gradient(45deg,#ff58b1,#b96bff,#59c7f9,#1dd1a1);
+    background-size: 400% 400%;
+    animation: bgshift 8s ease infinite;
+  }
+  @keyframes bgshift{
+    0%{background-position:0% 50%}
+    50%{background-position:100% 50%}
+    100%{background-position:0% 50%}
+  }
+  .dl-thumb-outer.photo{ background:linear-gradient(135deg,#ecf9ff,#e9fff6); }
+
+  /* çerçeveler */
+  .dl-frame-pink{
+    border: 3px solid transparent;
+    background: linear-gradient(#0000, #0000) padding-box,
+                linear-gradient(135deg, #ff58b1, #b96bff) border-box;
+    border-radius:16px;
+  }
+  .dl-frame-teal{
+    border: 3px solid transparent;
+    background: linear-gradient(#0000, #0000) padding-box,
+                linear-gradient(135deg, #1dd1a1, #36d1dc) border-box;
+    border-radius:16px;
+  }
+
+  /* Medya içi */
+  .dl-media{ width:100%; display:block; max-height: 62vh; object-fit: contain; border-radius:12px; background:#000; }
+  .dl-media.photo{ background:#eef7fb; }
+
+  .dl-card .dl-actions{
+    padding:12px; display:flex; align-items:center; gap:10px; justify-content:flex-end;
+    border-top:1px solid #f0eff7; background:#fff;
+  }
+
+  .btn-dl{
+    border:0; border-radius:10px; font-weight:700; padding:10px 14px;
+    background: linear-gradient(135deg, #1dd1a1, #10ac84); color:#fff;
+    box-shadow:0 6px 16px rgba(16,172,132,.24);
+    white-space:nowrap;
+  }
+  .btn-dl:hover{ transform: translateY(-1px); }
+
+  /* Reklam blokları (grid içi) */
+  .dl-ad{
+    border-radius:16px; background:linear-gradient(135deg,#fff7fe,#e8f3ff);
+    box-shadow:0 4px 14px rgba(127,97,255,.12);
+    min-height:120px; display:flex; align-items:center; justify-content:center;
+    border:1px dashed #bfa7ff66;
+  }
+
+  /* Yorumlar */
+  .dl-comments{
+    margin-top:18px; background:#fff; border-radius:16px; box-shadow:0 8px 24px rgba(0,0,0,.06);
+    border:1px solid #eee; overflow:hidden;
+  }
+  .dl-comments-head{
+    padding:12px 14px; font-weight:800; color:#6b59fd; background:linear-gradient(90deg,#f3f0ff,#fff);
+    border-bottom:1px solid #efeafd;
+  }
+  .dl-comment{ padding:10px 14px; border-bottom:1px solid #f2f2f6; color:#444; word-break: break-word; }
+  .dl-comment:last-child{ border-bottom:0; }
+  .dl-comment-ad{
+    padding:12px; border-top:1px dashed #e4d8ff; border-bottom:1px dashed #e4d8ff;
+    background:linear-gradient(90deg,#f7f3ff,#f0fbff); display:flex; align-items:center; justify-content:center;
+  }
+
+  /* ========== MODAL ========== */
+  #dl-modal{ display:none; position:fixed; inset:0; z-index:1040; background: rgba(18,19,30,.90); align-items:center; justify-content:center; }
+  #dl-modal.open{ display:flex; }
+  #dl-modal .overlay-click{ position:absolute; inset:0; }
+
+  .dl-modal-wrap{
+    --ctrl-h: 56px;
+    position:relative; display:flex; background:#fff; border-radius:18px;
+    box-shadow: 0 10px 50px rgba(32,16,90,.45); max-width:980px; width:97vw; max-height:88vh; overflow:hidden;
+  }
+  .dl-modal-left{
+    flex:1.6; background:#0b0b12; display:flex; align-items:center; justify-content:center;
+    padding-bottom: var(--ctrl-h);
+  }
+  .dl-modal-right{ flex:1; background:#f8f7ff; display:flex; align-items:center; justify-content:center; padding:10px; }
+  .dlm-media{ max-width:96%; max-height: calc(74vh - var(--ctrl-h)); object-fit:contain; display:block; background:#000; border-radius:12px; }
+  .dlm-media.photo{ background:#eef7fb; }
+
+  .dlm-close{ position:absolute; top:10px; right:14px; font-size:2rem; line-height:1; background:none; border:0; color:#ffffff; text-shadow:0 2px 8px rgba(0,0,0,.6); cursor:pointer; z-index:2; }
+  .dlm-nav{ position:absolute; top:50%; transform:translateY(-50%); border:0; width:46px; height:46px; border-radius:50%;
+    background:#fff; color:#7a67ff; box-shadow:0 2px 12px rgba(66,52,140,.35); cursor:pointer; z-index:2; }
+  .dlm-prev{ left:10px; } .dlm-next{ right:10px; }
+
+  .dlm-controls{
+    position:absolute; left:0; right:0; bottom:0; height: var(--ctrl-h);
+    background:linear-gradient(90deg,#ecf0fd 60%,#f6e0f8 100%);
+    border-top:1px solid #e2dbfc; padding:8px 12px;
+    display:flex; align-items:center; justify-content:space-between; z-index:2;
+  }
+  .dlm-controls .btn-dl{ padding:9px 14px; }
+
+  @media (max-width: 720px){
+    .dl-modal-wrap{ flex-direction:column; --ctrl-h: 64px; }
+    .dl-modal-left, .dl-modal-right{ flex:unset; min-height:110px; }
+  }
+
+  .dlm-ad-desktop{ display:none; width:100%; }
+  .dlm-ad-mobile{ display:block; width:100%; }
+  @media (min-width:992px){ .dlm-ad-desktop{ display:block; } .dlm-ad-mobile{ display:none; } }
+</style>
+
+{% set has_media = (media and media.downloads) or video_url or (image_urls and image_urls|length>0) %}
+{% set items = [] %}
+{% if media and media.downloads %}
+  {% for f in media.downloads %}
+    {% set _ = items.append({
+      'type': f.type or '',
+      'url': f.url,
+      'thumb': f.thumb or f.poster or media.poster or ''
+    }) %}
+  {% endfor %}
+{% else %}
+  {% if video_url %}{% set _ = items.append({'type':'video','url':video_url,'thumb': thumbnail_url or ''}) %}{% endif %}
+  {% for im in (image_urls or []) %}
+    {% set _ = items.append({'type':'image','url':im,'thumb': im}) %}
+  {% endfor %}
+{% endif %}
+
+{% set image_map = [] %}
+{% for it in items %}
+  {% if it.type == 'image' %}{% set _ = image_map.append(it.url) %}{% endif %}
+{% endfor %}
+
+<div class="dl-topbar">
+  <div class="fw-bold" style="color:#6b59fd;">{{ _('Ready to download') }}</div>
+  <a class="btn btn-new" href="{% if get_locale() == 'en' %}{{ url_for('index', lang='en')|replace('/en', '') }}{% else %}{{ url_for('index', lang=get_locale()) }}{% endif %}">
+    <i class="bi bi-plus-circle me-1"></i> {{ _('New Download') }}
+  </a>
+</div>
+
+{% if ad_html %}
+  <div class="dl-ad mb-3">
+    {{ ad_html("download_top") }}
+  </div>
+{% endif %}
+
+{% if not has_media %}
+  <div class="alert alert-info">
+    <strong>{{ _('Nothing to show yet.') }}</strong>
+    <div class="text-muted">{{ _('Paste a valid Instagram media link on the homepage and try again.') }}</div>
+  </div>
+{% else %}
+
+  <!-- MEDYA GRID -->
+  <div class="dl-grid">
+    {% set ads_every = 4 %}
+    {% for it in items %}
+      {% set is_video = (it.type == 'video') %}
+      <div class="dl-card {{ 'video dl-frame-pink' if is_video else 'photo dl-frame-teal' }}">
+        <div class="dl-thumb-outer {{ 'video' if is_video else 'photo' }}">
+          {% if is_video %}
+            {% set poster_src = it.thumb or (thumbnail_url or '') %}
+            <video class="dl-media" preload="none"
+                   {% if poster_src %}poster="{{ poster_src }}"{% endif %}
+                   muted playsinline></video>
+            <button class="position-absolute btn btn-light rounded-pill px-3 py-2" style="bottom:12px; left:12px;"
+                    onclick="openModal({{ loop.index0 }})">
+              <i class="bi bi-play-circle me-1"></i>{{ _('Preview') }}
+            </button>
+          {% else %}
+            <img class="dl-media photo" src="{{ (it.thumb or it.url) }}" alt="image"
+                 style="cursor:pointer;" onclick="openModal({{ loop.index0 }})">
+          {% endif %}
+        </div>
+        <div class="dl-actions">
+          {% if is_video %}
+            <a class="btn-dl" href="{{ url_for('direct_dl') }}"><i class="bi bi-download me-1"></i>{{ _('Download Video') }}</a>
+          {% else %}
+            {% set img_i = image_map.index(it.url) if it.url in image_map else -1 %}
+            <a class="btn-dl" href="{{ url_for('photo_dl', i=img_i) }}"><i class="bi bi-download me-1"></i>{{ _('Download Image') }}</a>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if (loop.index % ads_every) == 0 %}
+        <div class="dl-ad">
+          {{ ad_html("download_grid") if ad_html else '' }}
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+
+  {% set limited_comments = (comments or [])[:56] %}
+  {% if limited_comments %}
+    <div class="dl-comments mt-4">
+      <div class="dl-comments-head"><i class="bi bi-chat-square-text me-1"></i>{{ _('Top Comments') }}</div>
+      <div>
+        {% for c in limited_comments %}
+          <div class="dl-comment">{{ c }}</div>
+          {% if (loop.index % 5) == 0 and not loop.last %}
+            <div class="dl-comment-ad">
+              {{ ad_html("download_comments") if ad_html else '' }}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+{% endif %}
+
+<!-- MODAL -->
+<div id="dl-modal" role="dialog" aria-modal="true">
+  <div class="overlay-click" onclick="closeModal()"></div>
+  <div class="dl-modal-wrap">
+    <div class="dl-modal-left">
+      <div id="dlm-preview"></div>
+    </div>
+    <div class="dl-modal-right">
+      <div class="dlm-ad-desktop" id="dlm-ad-desktop">
+        {{ ad_html("modal_desktop") if ad_html else '' }}
+      </div>
+      <div class="dlm-ad-mobile" id="dlm-ad-mobile">
+        {{ ad_html("modal_mobile") if ad_html else '' }}
+      </div>
+    </div>
+    <button class="dlm-close" onclick="closeModal()" aria-label="Close">&times;</button>
+    <button class="dlm-nav dlm-prev" onclick="prevItem()" title="Prev">&#8678;</button>
+    <button class="dlm-nav dlm-next" onclick="nextItem()" title="Next">&#8680;</button>
+    <div class="dlm-controls">
+      <div id="dlm-type" class="fw-bold text-dark"></div>
+      <div id="dlm-dl-wrap"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const ITEMS = {{ items|tojson }};
+  const IMAGE_MAP = {{ image_map|tojson }};
+  const PHOTO_DL_BASE = "{{ url_for('photo_dl', i=0) }}";
+
+  let cur = 0;
+
+  function openModal(i){
+    cur = i;
+    renderModal();
+    document.getElementById('dl-modal').classList.add('open');
+  }
+  function closeModal(){
+    document.getElementById('dl-modal').classList.remove('open');
+    pauseAllVideos(true);
+    document.getElementById('dlm-preview').innerHTML = "";
+  }
+  function prevItem(){ if (cur>0){ cur--; swapModalMedia(); } }
+  function nextItem(){ if (cur<ITEMS.length-1){ cur++; swapModalMedia(); } }
+
+  function pauseAllVideos(hard=false){
+    document.querySelectorAll('video').forEach(v=>{
+      try{
+        v.pause();
+        if (hard && v.closest('#dl-modal')) { v.removeAttribute('src'); v.load(); }
+      }catch(_){}
+    });
+  }
+
+  function renderModal(){
+    document.getElementsByClassName('dlm-prev')[0].style.display = (cur>0) ? "" : "none";
+    document.getElementsByClassName('dlm-next')[0].style.display = (cur<ITEMS.length-1) ? "" : "none";
+    swapModalMedia();
+  }
+
+  function swapModalMedia(){
+    const it = ITEMS[cur] || {};
+    const prev = document.getElementsByClassName('dlm-prev')[0];
+    const next = document.getElementsByClassName('dlm-next')[0];
+    prev.style.display = (cur>0) ? "" : "none";
+    next.style.display = (cur<ITEMS.length-1) ? "" : "none";
+
+    pauseAllVideos(true);
+
+    let mediaHTML = "";
+    let dlHTML = "";
+    if ((it.type||"") === "video"){
+      mediaHTML = `<video class="dlm-media" src="${it.url}" controls autoplay playsinline></video>`;
+      dlHTML = `<a class="btn-dl" href="{{ url_for('direct_dl') }}"><i class="bi bi-download me-1"></i>{{ _('Download Video') }}</a>`;
+      document.getElementById('dlm-type').textContent = "🎬 {{ _('Video') }}";
+    }else{
+      const idx = IMAGE_MAP.indexOf(it.url);
+      mediaHTML = `<img class="dlm-media photo" src="${it.url}" alt="image">`;
+      const href = (idx>=0) ? (PHOTO_DL_BASE.replace(/0$/, String(idx))) : "#";
+      dlHTML = `<a class="btn-dl" href="${href}"><i class="bi bi-download me-1"></i>{{ _('Download Image') }}</a>`;
+      document.getElementById('dlm-type').textContent = "🖼 {{ _('Photo') }}";
+    }
+    document.getElementById('dlm-preview').innerHTML = mediaHTML;
+    document.getElementById('dlm-dl-wrap').innerHTML = dlHTML;
+  }
+
+  window.addEventListener('keydown', e=>{ if (e.key === "Escape") closeModal(); });
+  document.addEventListener('visibilitychange', ()=>{ if (document.hidden) pauseAllVideos(true); });
+</script>
+{% endblock %}

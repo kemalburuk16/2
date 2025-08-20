@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Cookie Policy · InstaVido' | default('Cookie Policy · InstaVido', true) }}{% endblock %}
+{% block content %}
+<div class="container my-5 py-4 bg-white rounded shadow-sm">
+  <h1 class="mb-3">Cookie Policy</h1>
+  <p class="text-muted mb-4">Effective date: 1 August 2025</p>
+
+  <p>
+    This policy explains how <strong>instavido.com</strong> (“<strong>InstaVido</strong>”, “we”, “us”) uses cookies and similar technologies,
+    what types we set, which third parties may set cookies, and how you can control them.
+    For broader privacy information, see our <a href="/privacy">Privacy Policy</a>.
+  </p>
+
+  <h4 class="mt-4">1) What Are Cookies?</h4>
+  <p>Cookies are small text files stored on your device by your browser. Similar technologies include local storage, pixels, and SDKs.</p>
+
+  <h4 class="mt-4">2) Legal Basis & Regions</h4>
+  <ul>
+    <li><strong>EEA/UK:</strong> We set <em>essential</em> cookies without consent (legitimate interests). <em>Analytics</em>/ <em>Advertising</em> cookies are set only with your consent.</li>
+    <li><strong>California (CCPA/CPRA):</strong> We do <em>not sell</em> personal information and do <em>not share</em> it for cross‑context behavioral advertising. Where ad partners are used, they operate on a consent‑only basis.</li>
+    <li><strong>Global Privacy Control (GPC) / Do Not Track:</strong> If your browser signals GPC/“Do Not Track”, we treat it as an opt‑out from non‑essential cookies where applicable.</li>
+  </ul>
+
+  <!-- Cookie Category Tabs -->
+  <ul class="nav nav-tabs mb-4" id="cookieTab" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="essential-tab" data-bs-toggle="tab" data-bs-target="#essential" type="button" role="tab" aria-controls="essential" aria-selected="true">Essential Cookies</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="analytics-tab" data-bs-toggle="tab" data-bs-target="#analytics" type="button" role="tab" aria-controls="analytics" aria-selected="false">Analytics Cookies</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="ads-tab" data-bs-toggle="tab" data-bs-target="#ads" type="button" role="tab" aria-controls="ads" aria-selected="false">Advertising Cookies</button>
+    </li>
+  </ul>
+
+  <div class="tab-content mb-5" id="cookieTabContent">
+    <!-- Essential Cookies -->
+    <div class="tab-pane fade show active" id="essential" role="tabpanel" aria-labelledby="essential-tab">
+      <p>These cookies are strictly necessary for the website to function (cannot be switched off in our systems).</p>
+      <div class="table-responsive">
+        <table class="table table-bordered align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Cookie Name</th>
+              <th>Provider</th>
+              <th>Purpose</th>
+              <th>Type</th>
+              <th>Duration</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>instavido_session</td>
+              <td>instavido.com</td>
+              <td>Maintains your session and core functionality</td>
+              <td>First‑party; strictly necessary</td>
+              <td>Session</td>
+            </tr>
+            <tr>
+              <td>age_ok</td>
+              <td>instavido.com</td>
+              <td>Remembers that you passed the age/terms gate</td>
+              <td>First‑party; strictly necessary</td>
+              <td>Up to 1 year</td>
+            </tr>
+            <tr>
+              <td>consent_analytics</td>
+              <td>instavido.com</td>
+              <td>Stores your cookie consent choice</td>
+              <td>First‑party; strictly necessary</td>
+              <td>Up to 1 year</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small text-muted mb-0">Blocking essential cookies will break the Service.</p>
+    </div>
+
+    <!-- Analytics Cookies -->
+    <div class="tab-pane fade" id="analytics" role="tabpanel" aria-labelledby="analytics-tab">
+      <p>Set only if you consent. Used to measure usage in aggregate to improve the Service. We configure analytics to avoid collecting identifiable information (e.g., IP masking where supported).</p>
+      <div class="table-responsive">
+        <table class="table table-bordered align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Cookie Name</th>
+              <th>Provider</th>
+              <th>Purpose</th>
+              <th>Type</th>
+              <th>Duration</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>_ga</td>
+              <td>Google Analytics</td>
+              <td>Anonymous usage statistics</td>
+              <td>Third‑party; analytics</td>
+              <td>2 years</td>
+            </tr>
+            <tr>
+              <td>_gid</td>
+              <td>Google Analytics</td>
+              <td>Anonymous session statistics</td>
+              <td>Third‑party; analytics</td>
+              <td>24 hours</td>
+            </tr>
+            <tr>
+              <td>_gat / _gat_gtag_*</td>
+              <td>Google Analytics</td>
+              <td>Throttle request rate</td>
+              <td>Third‑party; analytics</td>
+              <td>1 minute</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small text-muted mb-0">Analytics will be disabled if you refuse consent, enable GPC, or use “Do Not Track”.</p>
+    </div>
+
+    <!-- Advertising Cookies -->
+    <div class="tab-pane fade" id="ads" role="tabpanel" aria-labelledby="ads-tab">
+      <p>Third‑party ad networks may set cookies to measure ad performance and prevent fraud. We do not read or set these directly.</p>
+      <div class="table-responsive">
+        <table class="table table-bordered align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Cookie Name</th>
+              <th>Provider</th>
+              <th>Purpose</th>
+              <th>Type</th>
+              <th>Duration</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>various IDs (e.g., <em>adst_*</em>, <em>sessid</em>, <em>uid</em>)</td>
+              <td>Ad networks</td>
+              <td>Ad delivery, frequency capping, click‑fraud prevention</td>
+              <td>Third‑party; advertising</td>
+              <td>Session / up to 1 year</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small text-muted mb-0">Ad cookies are governed by the provider’s privacy policy. You may disable ads cookies via our banner or your browser.</p>
+    </div>
+  </div>
+
+  <h4>3) Manage Your Choices</h4>
+  <p>
+    You can revisit the cookie banner by clearing the <code>consent_analytics</code> cookie, or manage cookies in your browser settings.
+    For privacy rights, see the <a href="/privacy">Privacy Policy</a>.
+  </p>
+
+  <!-- Live Cookies -->
+  <div class="mb-3">
+    <button class="btn btn-outline-primary" type="button" onclick="showCookiesModal()">
+      <i class="bi bi-eye"></i> Show My Cookies
+    </button>
+    <button class="btn btn-outline-danger ms-2" type="button" onclick="deleteAllCookies()">
+      <i class="bi bi-trash"></i> Delete All Cookies (this site)
+    </button>
+  </div>
+
+  <!-- Cookies Modal -->
+  <div class="modal fade" id="cookiesModal" tabindex="-1" aria-labelledby="cookiesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="border-radius: 16px;">
+        <div class="modal-header">
+          <h5 class="modal-title" id="cookiesModalLabel">Your Cookies</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="cookieLiveList" class="mb-2"></div>
+          <p class="small text-muted mb-0">Tip: some third‑party cookies may require clearing in your browser settings.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showCookiesModal() {
+    const box = document.getElementById('cookieLiveList');
+    const raw = (document.cookie || '');
+    const cookies = raw.split(';').map(x => x.trim()).filter(Boolean);
+    let html = "<ul class='list-group'>";
+    if (!cookies.length) {
+      html += "<li class='list-group-item text-danger'>No first‑party cookies found.</li>";
+    } else {
+      for (const c of cookies) {
+        const idx = c.indexOf('=');
+        const name = idx >= 0 ? c.slice(0, idx) : c;
+        const val  = idx >= 0 ? c.slice(idx+1) : '';
+        let badge = "Other";
+        if (name === 'instavido_session' || name === 'age_ok') badge = 'Essential';
+        else if (name === 'consent_analytics') badge = 'Essential';
+        else if (name.startsWith('_ga') || name.startsWith('_gid') || name.startsWith('_gat')) badge = 'Analytics';
+        html += `<li class="list-group-item"><b>${name}</b> = <code>${val || '...'}</code> <span class="badge bg-secondary ms-1">${badge}</span></li>`;
+      }
+    }
+    html += "</ul>";
+    box.innerHTML = html;
+    new bootstrap.Modal(document.getElementById('cookiesModal')).show();
+  }
+
+  // Best-effort deletion of first‑party cookies for current domain and path
+  function deleteAllCookies(){
+    const parts = location.hostname.split('.');
+    const domains = [];
+    for (let i=0; i<parts.length; i++){ domains.push(parts.slice(i).join('.')); }
+    const names = (document.cookie || '').split(';').map(x => x.trim().split('=')[0]).filter(Boolean);
+    const ex = 'Thu, 01 Jan 1970 00:00:00 GMT';
+    for (const name of names){
+      document.cookie = `${name}=; expires=${ex}; path=/;`;
+      for (const d of domains){ document.cookie = `${name}=; expires=${ex}; path=/; domain=.${d};`; }
+    }
+    setTimeout(()=>location.reload(), 400);
+  }
+</script>
+{% endblock %}

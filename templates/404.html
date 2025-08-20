@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}404 - {{ _('Page Not Found') }}{% endblock %}
+{% block content %}
+<div class="text-center my-5">
+  <h1 class="display-3 text-danger fw-bold">404</h1>
+  <h3>{{ _('Page Not Found!') }}</h3>
+  <p class="text-muted mt-3">{{ _('Sorry, the page you are looking for does not exist.') }}</p>
+  <a href="{{ url_for('index', lang=get_locale()) }}" class="btn btn-primary mt-4">
+    <i class="bi bi-house-door"></i> {{ _('Go to Home Page') }}
+  </a>
+  <div class="mt-4">
+    <p class="text-muted">{{ _('Try one of our main features:') }}</p>
+    <a href="{{ url_for('video', lang=get_locale()) }}" class="btn btn-outline-primary btn-sm mx-1">Instagram Video İndir</a>
+    <a href="{{ url_for('reels', lang=get_locale()) }}" class="btn btn-outline-success btn-sm mx-1">Reels İndir</a>
+    <a href="{{ url_for('photo', lang=get_locale()) }}" class="btn btn-outline-warning btn-sm mx-1">Fotoğraf İndir</a>
+    <a href="{{ url_for('story', lang=get_locale()) }}" class="btn btn-outline-info btn-sm mx-1">Story İndir</a>
+  </div>
+  <p class="mt-5 small text-muted">instavido.com</p>
+</div>
+{% endblock %}

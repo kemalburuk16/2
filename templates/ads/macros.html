@@ -1,0 +1,56 @@
+{# /var/www/instavido/templates/ads/macros.html #}
+{% macro render_ad(slot_code) -%}
+<div class="ad-slot ad-slot-{{ slot_code }}" data-slot="{{ slot_code }}" style="width:100%; display:flex; justify-content:center; align-items:center;">
+  <div class="ad-slot-inner" style="max-width:100%; width:100%; text-align:center;"></div>
+</div>
+<script>
+(function(slot){
+  const root = document.currentScript && document.currentScript.previousElementSibling;
+  const container = root ? root.querySelector('.ad-slot-inner') : null;
+  if(!container) return;
+
+  function runScriptsSequentially(scopeEl){
+    const scripts = Array.from(scopeEl.querySelectorAll('script'));
+    if (scripts.length === 0) return Promise.resolve();
+
+    const _write = document.write;
+    document.write = function(html){
+      try { scopeEl.insertAdjacentHTML('beforeend', html); }
+      catch(e) { /* yut */ }
+    };
+
+    let p = Promise.resolve();
+    scripts.forEach(orig => {
+      p = p.then(() => new Promise((res) => {
+        const s = document.createElement('script');
+        for (const attr of orig.attributes) s.setAttribute(attr.name, attr.value);
+        if (!orig.src) {
+          s.text = orig.text || orig.innerHTML || '';
+          orig.parentNode.replaceChild(s, orig);
+          res();
+        } else {
+          s.onload = () => res();
+          s.onerror = () => res();
+          orig.parentNode.replaceChild(s, orig);
+        }
+      }));
+    });
+
+    return p.finally(() => { document.write = _write; });
+  }
+
+  fetch(`/srdr-proadmin/ads/api/slot/${encodeURIComponent(slot)}.html`, { credentials: 'same-origin' })
+    .then(r => {
+      if (r.status === 204) return '';
+      if (!r.ok) throw new Error('Ad fetch failed');
+      return r.text();
+    })
+    .then(html => {
+      if (!html) return;
+      container.innerHTML = html;
+      return runScriptsSequentially(container);
+    })
+    .catch(() => { /* sessiz hata */ });
+})("{{ slot_code }}");
+</script>
+{%- endmacro %}

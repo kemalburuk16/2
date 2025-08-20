@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Download Instagram Stories Free | InstaVido') }}{% endblock %}
+{% block meta_desc %}{{ _('Download any Instagram story from public profiles or direct story links in HD quality. Fast, free & no watermark. Paste profile or story link and download instantly!') }}{% endblock %}
+
+{% block header %}
+<div class="page-hero"
+     style="background: linear-gradient(125deg,#55f 0%,#2df5d6 33%,#e17ef9 66%,#f991bf 100%);
+            min-height: 370px;
+            border-radius: 0 0 2.3rem 2.3rem;
+            box-shadow: 0 0px 0px #7c43b522, 0 1px 0 #fff4 inset;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            margin-bottom: 1.5rem; position: relative; overflow: hidden; width:100%; max-width:100%;">
+  
+  <!-- LOGO -->
+  <div class="mt-3 mb-2 w-100 d-flex justify-content-center">
+    <img src="/static/logo3.png" alt="InstaVido Logo" class="page-logo"
+         style="max-width:500px; width:34vw; min-width:170px; height:auto;
+                filter: drop-shadow(0 7px 28px #6f47ffcc);">
+  </div>
+
+  <!-- Başlık -->
+  <div class="text-center mb-3 w-100 d-flex flex-column align-items-center">
+    <h1 class="hero-title hero--md">
+      {{ _('Download Instagram videos, reels, stories & photos for free!') }}
+    </h1>
+  </div>
+
+  <!-- FORM (Story için) -->
+  {% set action_url = url_for('story', lang=lang if lang else get_locale()) %}
+  {% set placeholder = _('Paste your Instagram story or profile link here...') %}
+  {% set ad_text = '' %}
+  {% include "form.html" %}
+</div>
+{% endblock %}
+
+{% block content %}
+
+<section class="container my-5">
+  <h2 class="text-center fw-bold mb-5" style="color:#7e39d1; font-size:2.2rem;">
+    📖 {{ _('How to Download Instagram Stories in 3 Easy Steps') }}
+  </h2>
+
+  <div class="row text-center gy-5">
+
+    <!-- Adım 1 -->
+    <div class="col-md-4">
+      <div class="display-3 mb-3">👤</div>
+      <h3 class="h5 fw-bold mb-2">{{ _('Copy the Profile Link') }}</h3>
+      <p class="text-muted mb-0">
+        {{ _('Go to the Instagram profile whose story you want to download. Tap the menu (⋯) and select') }} <strong>{{ _('“Copy Profile URL”') }}</strong>. {{ _('This is required for story access.') }}
+      </p>
+    </div>
+
+    <!-- Adım 2 -->
+    <div class="col-md-4">
+      <div class="display-3 mb-3">📋</div>
+      <h3 class="h5 fw-bold mb-2">{{ _('Paste the Link into InstaVido') }}</h3>
+      <p class="text-muted mb-0">
+        {{ _('Visit') }} <strong>InstaVido.com</strong> {{ _('and paste the copied Instagram profile link into the search bar. Make sure the profile is public and currently has a story.') }}
+      </p>
+    </div>
+
+    <!-- Adım 3 -->
+    <div class="col-md-4">
+      <div class="display-3 mb-3">📥</div>
+      <h3 class="h5 fw-bold mb-2">{{ _('Download the Active Story') }}</h3>
+      <p class="text-muted mb-0">
+        {{ _('InstaVido will detect active stories from the profile. Simply choose the one you want and click') }} <strong>{{ _('Download') }}</strong> {{ _('to save it in high resolution instantly.') }}
+      </p>
+    </div>
+
+  </div>
+</section>
+
+<section class="container my-5">
+  <div class="row align-items-center">
+
+    <!-- Sol: Metin -->
+    <div class="col-md-6">
+      <h2 class="fw-bold mb-3" style="color:#7e39d1;">📖 {{ _('What is an Instagram Story?') }}</h2>
+      <p class="text-muted fs-5">
+        {{ _('An Instagram Story is a temporary piece of visual content — photo or video — that disappears after 24 hours. It appears at the top of your feed and is used to share quick updates, behind-the-scenes moments, or time-sensitive content. Unlike regular posts, stories are not displayed permanently on your profile unless added to highlights. Stories can include text, music, polls, and interactive elements. They are a powerful way to stay connected in real-time.') }}
+      </p>
+    </div>
+
+    <!-- Sağ: Görsel -->
+    <div class="col-md-6 text-center mt-4 mt-md-0">
+      <img src="/static/page1.png" alt="{{ _('What is Instagram Story?') }}" class="img-fluid rounded shadow-lg" style="max-height:400px;">
+    </div>
+
+  </div>
+</section>
+
+<section class="container my-5">
+  <h2 class="text-center fw-bold mb-5" style="color:#7e39d1;">❓ {{ _('Frequently Asked Questions – Instagram Story') }}</h2>
+  <div class="accordion" id="storyFaqAccordion">
+
+    <!-- 1 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="storyQ1">
+        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#storyA1">
+          1. {{ _('What is an Instagram Story?') }}
+        </button>
+      </h2>
+      <div id="storyA1" class="accordion-collapse collapse show" data-bs-parent="#storyFaqAccordion">
+        <div class="accordion-body">
+          {{ _('Instagram Stories are temporary photos or videos that disappear after 24 hours. They\'re used for sharing real-time moments and interactive content.') }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 2 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="storyQ2">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#storyA2">
+          2. {{ _('Where do Stories appear on Instagram?') }}
+        </button>
+      </h2>
+      <div id="storyA2" class="accordion-collapse collapse" data-bs-parent="#storyFaqAccordion">
+        <div class="accordion-body">
+          {{ _('Stories appear at the top of your Instagram feed and are shown as profile icons. Tapping a user’s icon lets you view their most recent story updates.') }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="storyQ3">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#storyA3">
+          3. {{ _('Can stories be saved or archived on Instagram?') }}
+        </button>
+      </h2>
+      <div id="storyA3" class="accordion-collapse collapse" data-bs-parent="#storyFaqAccordion">
+        <div class="accordion-body">
+          {{ _('Yes, users can archive their stories and add them to "Highlights" on their profile. However, viewers cannot save them directly without third-party tools.') }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="storyQ4">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#storyA4">
+          4. {{ _('Can I view stories anonymously using InstaVido?') }}
+        </button>
+      </h2>
+      <div id="storyA4" class="accordion-collapse collapse" data-bs-parent="#storyFaqAccordion">
+        <div class="accordion-body">
+          {{ _('Yes! When you use InstaVido to download stories, your identity is never revealed. It allows full privacy and anonymity — no login or tracking involved.') }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 5 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="storyQ5">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#storyA5">
+          5. {{ _('How do I download a story using InstaVido?') }}
+        </button>
+      </h2>
+      <div id="storyA5" class="accordion-collapse collapse" data-bs-parent="#storyFaqAccordion">
+        <div class="accordion-body">
+          {{ _('Copy the Instagram profile link of the user with an active story. Paste it into InstaVido’s box and click download. All visible stories will be listed.') }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 6 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="storyQ6">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#storyA6">
+          6. {{ _('Can I download stories from private Instagram accounts?') }}
+        </button>
+      </h2>
+      <div id="storyA6" class="accordion-collapse collapse" data-bs-parent="#storyFaqAccordion">
+        <div class="accordion-body">
+          {{ _('No, stories from private accounts are not accessible through InstaVido. Only stories from public profiles can be detected and downloaded.') }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 7 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="storyQ7">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#storyA7">
+          7. {{ _('Do I need an Instagram login to use InstaVido?') }}
+        </button>
+      </h2>
+      <div id="storyA7" class="accordion-collapse collapse" data-bs-parent="#storyFaqAccordion">
+        <div class="accordion-body">
+          {{ _('Not at all. InstaVido doesn’t require login or registration. Simply paste the public Instagram profile URL and download stories instantly.') }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 8 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="storyQ8">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#storyA8">
+          8. {{ _('Is the downloaded story saved in high quality?') }}
+        </button>
+      </h2>
+      <div id="storyA8" class="accordion-collapse collapse" data-bs-parent="#storyFaqAccordion">
+        <div class="accordion-body">
+          {{ _('Yes! InstaVido provides the highest resolution available for Instagram Stories. Your downloads are clean, clear, and free from compression or watermark.') }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 9 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="storyQ9">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#storyA9">
+          9. {{ _('Is InstaVido safe and legal to use?') }}
+        </button>
+      </h2>
+      <div id="storyA9" class="accordion-collapse collapse" data-bs-parent="#storyFaqAccordion">
+        <div class="accordion-body">
+          {{ _('InstaVido is safe to use and doesn’t store user data. Downloading stories for personal use is allowed, but public sharing without permission may be restricted.') }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 10 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="storyQ10">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#storyA10">
+          10. {{ _('Does InstaVido work on mobile for story downloads?') }}
+        </button>
+      </h2>
+      <div id="storyA10" class="accordion-collapse collapse" data-bs-parent="#storyFaqAccordion">
+        <div class="accordion-body">
+          {{ _('Yes. InstaVido is fully responsive and optimized for mobile. You can download stories on your phone just as easily as on desktop — no app required.') }}
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Download Instagram Reels Free | InstaVido') }}{% endblock %}
+{% block meta_desc %}{{ _('Download any Instagram reel from public profiles in high quality. Fast, free and no watermark. Paste your Instagram reel link and start downloading instantly!') }}{% endblock %}
+
+{% block header %}
+<div class="page-hero"
+     style="background: linear-gradient(125deg,#55f 0%,#2df5d6 33%,#e17ef9 66%,#f991bf 100%);
+            min-height: 370px;
+            border-radius: 0 0 2.3rem 2.3rem;
+            box-shadow: 0 0px 0px #7c43b522, 0 1px 0 #fff4 inset;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            margin-bottom: 1.5rem; position: relative; overflow: hidden; width:100%; max-width:100%;">
+    
+    <!-- LOGO -->
+    <div class="mt-3 mb-2 w-100 d-flex justify-content-center">
+        <img src="/static/logo3.png" alt="InstaVido Logo" class="page-logo"
+            style="max-width:500px; width:34vw; min-width:170px; height:auto;
+                   filter: drop-shadow(0 7px 28px #6f47ffcc);">
+    </div>
+
+    <!-- Başlık -->
+    <div class="text-center mb-3 w-100 d-flex flex-column align-items-center">
+        <h1 class="hero-title hero--md">
+            {{ _('Download Instagram Reels for Free!') }}
+        </h1>
+    </div>
+
+    {% set action_url = url_for('index', lang=lang if lang else get_locale()) %}
+    {% set placeholder = _('Paste your Instagram reel link here...') %}
+    {% set ad_text = '' %}
+    {% include "form.html" %}
+
+    <!-- JS (Paste Button) -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function(){
+            const pasteBtn = document.getElementById('pasteBtn');
+            const input = document.getElementById('instagram_url');
+            if (navigator.clipboard) {
+                pasteBtn.onclick = function() {
+                    navigator.clipboard.readText().then(txt => {
+                        input.value = txt;
+                        input.focus();
+                    });
+                };
+            } else {
+                pasteBtn.disabled = true;
+            }
+        });
+    </script>
+
+</div>
+{% endblock %}
+
+{% block content %}
+<section class="container my-5">
+    <h2 class="text-center fw-bold mb-5" style="color:#7e39d1; font-size:2.2rem; letter-spacing:1px;">
+        {{ _('How to Download Instagram Reels?') }}
+    </h2>
+    <div class="row align-items-stretch justify-content-center gy-5">
+        <div class="col-md-4 d-flex flex-column align-items-center">
+            <img src="/static/guide1.png" alt="{{ _('Copy Instagram Link') }}" class="img-fluid rounded shadow-sm mb-4" style="max-height:210px;">
+            <h3 class="h5 fw-bold text-center mb-2">{{ _('Copy the Link') }}</h3>
+            <p class="text-secondary text-center mb-0">
+                {{ _('Open the Instagram app or website.') }}<br>
+                {{ _('Copy the link of the Reel you want to download.') }}
+            </p>
+        </div>
+        <div class="col-md-4 d-flex flex-column align-items-center">
+            <img src="/static/guide2.png" alt="{{ _('Paste the Link') }}" class="img-fluid rounded shadow-sm mb-4" style="max-height:210px;">
+            <h3 class="h5 fw-bold text-center mb-2">{{ _('Paste the Link') }}</h3>
+            <p class="text-secondary text-center mb-0">
+                {{ _('Return to InstaVido, paste the link into the box above, and click') }} <b>{{ _('Download') }}</b>.
+            </p>
+        </div>
+        <div class="col-md-4 d-flex flex-column align-items-center">
+            <img src="/static/guide3.png" alt="{{ _('Download Reel') }}" class="img-fluid rounded shadow-sm mb-4" style="max-height:210px;">
+            <h3 class="h5 fw-bold text-center mb-2">{{ _('Download Reel') }}</h3>
+            <p class="text-secondary text-center mb-0">
+                {{ _('Choose your desired quality and download instantly.') }}<br>
+                <b>{{ _('Free, fast & secure!') }}</b>
+            </p>
+        </div>
+    </div>
+</section>
+
+<section class="container my-5">
+  <div class="row align-items-center">
+
+    <!-- Sol: Metin -->
+    <div class="col-md-6">
+      <h2 class="fw-bold mb-3" style="color:#7e39d1;">🎞️ {{ _('Download Instagram Reels Instantly') }}</h2>
+      <p class="text-muted fs-5 mb-4">
+        {{ _('Want to save funny, inspiring, or viral Reels to your device? 📲 InstaVido makes it easy to download any public Instagram Reel in just seconds. No app, no login, no watermark — just') }} <strong>{{ _('fast and high-quality Reels downloads') }}</strong> {{ _('at your fingertips.') }}
+      </p>
+      <ul class="list-unstyled text-muted fs-6">
+        <li class="mb-2">✅ {{ _('Paste the link – we detect the Reel instantly') }}</li>
+        <li class="mb-2">✅ {{ _('Download in HD – no quality loss') }}</li>
+        <li class="mb-2">✅ {{ _('%(percent)s free, anonymous & mobile-friendly', percent='100%') }}</li>
+        <li class="mb-2">✅ {{ _('Works on any device – Android, iOS, or desktop') }}</li>
+      </ul>
+      <p class="text-muted mt-3">
+        {{ _('Don’t just scroll — save and share the best Reels with one click. 🎉 Try InstaVido now and enjoy Reels offline, anytime!') }}
+      </p>
+    </div>
+
+    <!-- Sağ: Görsel -->
+    <div class="col-md-6 text-center mt-4 mt-md-0">
+      <img src="/static/page2.png" alt="{{ _('Download Instagram Reels') }}" class="img-fluid rounded shadow-lg" style="max-height:420px;">
+    </div>
+
+  </div>
+</section>
+
+<section class="container my-5">
+  <h2 class="text-center fw-bold mb-5" style="color:#7e39d1; font-size:2.2rem; letter-spacing:1px;">
+    🎯 {{ _('How to Download Instagram Reels?') }}
+  </h2>
+
+  <div class="row text-center gy-5">
+    
+    <!-- Adım 1 -->
+    <div class="col-md-4">
+      <div class="display-3 mb-3">📋</div>
+      <h3 class="h5 fw-bold mb-2">{{ _('Find and Copy the Reel Link') }}</h3>
+      <p class="text-muted mb-0">
+        {{ _('Open Instagram and go to the Reel you want to download. Tap the three-dot icon (⋯) and select') }} <strong>{{ _('"Copy Link"') }}</strong> {{ _('from the menu.') }}
+      </p>
+    </div>
+
+    <!-- Adım 2 -->
+    <div class="col-md-4">
+      <div class="display-3 mb-3">📎</div>
+      <h3 class="h5 fw-bold mb-2">{{ _('Paste the Link into InstaVido') }}</h3>
+      <p class="text-muted mb-0">
+        {{ _('Go to') }} <strong>InstaVido.com</strong>{{ _(', paste the copied Reel link into the input box at the top of the page, and hit the') }} <strong>{{ _('Download') }}</strong> {{ _('button.') }}
+      </p>
+    </div>
+
+    <!-- Adım 3 -->
+    <div class="col-md-4">
+      <div class="display-3 mb-3">⬇️</div>
+      <h3 class="h5 fw-bold mb-2">{{ _('Download and Enjoy Offline') }}</h3>
+      <p class="text-muted mb-0">
+        {{ _('Your Reel will be ready in seconds! Download it in high quality without watermark, and watch or share it offline anytime you like.') }}
+      </p>
+    </div>
+
+  </div>
+</section>
+
+<section class="container my-5">
+  <h2 class="text-center fw-bold mb-5" style="color:#7e39d1;">❓ {{ _('Frequently Asked Questions – Reels Downloader') }}</h2>
+  <div class="accordion" id="reelsFaqAccordion">
+
+    <!-- 1 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="rfaq1">
+        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#ra1">
+          1. {{ _('How do I download an Instagram Reel using InstaVido?') }}
+        </button>
+      </h2>
+      <div id="ra1" class="accordion-collapse collapse show" data-bs-parent="#reelsFaqAccordion">
+        <div class="accordion-body">
+          {{ _('Copy the link of any public Instagram Reel, paste it into the InstaVido box, and click Download. Your video will be ready instantly in high quality.') }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 2 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="rfaq2">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ra2">
+          2. {{ _('Can I download private or restricted Reels?') }}
+        </button>
+      </h2>
+      <div id="ra2" class="accordion-collapse collapse" data-bs-parent="#reelsFaqAccordion">
+        <div class="accordion-body">
+          {{ _('No, InstaVido only supports public Reels. If the account is private, the video content is not accessible or downloadable due to Instagram’s privacy policies.') }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="rfaq3">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ra3">
+          3. {{ _('Will the downloaded Reel have a watermark?') }}
+        </button>
+      </h2>
+      <div id="ra3" class="accordion-collapse collapse" data-bs-parent="#reelsFaqAccordion">
+        <div class="accordion-body">
+          {{ _('No. InstaVido provides clean video files without watermarks or branding. You get the original Reel content as uploaded, with full quality and no logos.') }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="rfaq4">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ra4">
+          4. {{ _('Do I need to install an app or browser plugin?') }}
+        </button>
+      </h2>
+      <div id="ra4" class="accordion-collapse collapse" data-bs-parent="#reelsFaqAccordion">
+        <div class="accordion-body">
+          {{ _('No app, extension, or registration is required. InstaVido is a browser-based tool that works on all devices — just paste the Reel link and download instantly.') }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 5 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="rfaq5">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ra5">
+          5. {{ _('What video quality can I expect from downloaded Reels?') }}
+        </button>
+      </h2>
+      <div id="ra5" class="accordion-collapse collapse" data-bs-parent="#reelsFaqAccordion">
+        <div class="accordion-body">
+          {{ _('InstaVido automatically retrieves the highest resolution available. Most Reels download in HD (720p or higher), depending on the original upload quality.') }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 6 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="rfaq6">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ra6">
+          6. {{ _('Can I download Reels on my phone?') }}
+        </button>
+      </h2>
+      <div id="ra6" class="accordion-collapse collapse" data-bs-parent="#reelsFaqAccordion">
+        <div class="accordion-body">
+          {{ _('Yes! InstaVido is fully mobile-friendly. You can download Instagram Reels directly on your iPhone, Android, or tablet without any special app or setup.') }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 7 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="rfaq7">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ra7">
+          7. {{ _('Is InstaVido safe and private to use?') }}
+        </button>
+      </h2>
+      <div id="ra7" class="accordion-collapse collapse" data-bs-parent="#reelsFaqAccordion">
+        <div class="accordion-body">
+          {{ _('Absolutely. InstaVido does not require login, doesn’t track users, and doesn’t store downloads. Your activity remains anonymous and fully secure.') }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 8 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="rfaq8">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ra8">
+          8. {{ _('Is it legal to download Instagram Reels?') }}
+        </button>
+      </h2>
+      <div id="ra8" class="accordion-collapse collapse" data-bs-parent="#reelsFaqAccordion">
+        <div class="accordion-body">
+          {{ _('Downloading Reels for personal use is generally fine. However, reposting or using content commercially without the creator’s permission may violate copyright.') }}
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,109 @@
+{# /var/www/instavido/templates/partials/age_gate_modal.html #}
+<div class="modal fade" id="ivAgeGateModal" tabindex="-1" aria-labelledby="ivAgeGateTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content" style="border-radius:18px; overflow:hidden;">
+      <div class="modal-header" style="background: linear-gradient(135deg,#6f47ff,#59c7f9); color:#fff;">
+        <h5 class="modal-title" id="ivAgeGateTitle">
+          <i class="bi bi-shield-check me-2"></i>{{ _('One-time Age & Terms Confirmation') }}
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="{{ _('Close') }}"></button>
+      </div>
+
+      <form id="ivAgeGateForm" method="POST" action="{{ url_for('gate', lang=get_locale()) }}">
+        <input type="hidden" name="next" value="{{ request.url }}">
+        <div class="modal-body">
+          <div class="alert alert-info d-flex align-items-start" role="alert" style="border-radius:12px;">
+            <i class="bi bi-info-circle me-2 fs-5"></i>
+            <div>
+              <strong>{{ _('Heads up!') }}</strong>
+              {{ _('To use InstaVido, we need a one-time confirmation that you are 13+ and accept our terms. This will be remembered for a year on this browser.') }}
+            </div>
+          </div>
+
+          <div class="form-check my-2">
+            <input class="form-check-input" type="checkbox" value="on" id="age13" name="age13" required>
+            <label class="form-check-label" for="age13">
+              {{ _('I confirm I am 13 years of age or older.') }}
+            </label>
+          </div>
+
+          <div class="form-check my-2">
+            <input class="form-check-input" type="checkbox" value="on" id="terms" name="terms" required>
+            <label class="form-check-label" for="terms">
+              {{ _('I have read and accept the') }}
+              <a href="{{ url_for('privacy', lang=get_locale()) }}" target="_blank">{{ _('Privacy Policy') }}</a>
+              {{ _('and') }}
+              <a href="{{ url_for('terms', lang=get_locale()) }}" target="_blank">{{ _('Terms') }}</a>.
+            </label>
+          </div>
+
+          {% if RECAPTCHA_SITE_KEY %}
+          <div class="mt-3">
+            <div class="g-recaptcha" data-sitekey="{{ RECAPTCHA_SITE_KEY }}"></div>
+          </div>
+          {% endif %}
+
+          <div class="small text-muted mt-3">
+            {{ _('This confirmation is stored as a cookie (age_ok=1) for 12 months. You can clear it anytime from your browser settings.') }}
+          </div>
+        </div>
+        <div class="modal-footer" style="background:#f8f9fb;">
+          <button type="submit" class="btn btn-primary px-4">
+            <i class="bi bi-check2-circle me-1"></i>{{ _('Confirm & Continue') }}
+          </button>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            {{ _('Cancel') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% if RECAPTCHA_SITE_KEY %}
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+{% endif %}
+
+<script>
+(function(){
+  // AJAX submit: onay → cookie/session set → modal kapanır → bekleyen form submit
+  document.addEventListener('DOMContentLoaded', function(){
+    const formEl = document.getElementById('ivAgeGateForm');
+    const modalEl = document.getElementById('ivAgeGateModal');
+    if(!formEl || !modalEl) return;
+    const modal = new bootstrap.Modal(modalEl, { backdrop:'static', keyboard:false });
+
+    formEl.addEventListener('submit', async function(ev){
+      ev.preventDefault();
+      const action = formEl.getAttribute('action');
+      const fd = new FormData(formEl);
+
+      try{
+        const r = await fetch(action, {
+          method: 'POST',
+          body: fd,
+          credentials: 'same-origin'
+        });
+        // Başarılı kabul: 200-399 arası
+        if (r.status >= 200 && r.status < 400) {
+          window.ivGatePassed = true;
+          modal.hide();
+          // Bekleyen formu gönder
+          if (window.__ivPendingForm) {
+            const pending = window.__ivPendingForm;
+            window.__ivPendingForm = null;
+            // ufak bir delay, cookie yazımı için
+            setTimeout(()=> pending.submit(), 50);
+          }
+        } else {
+          // başarısızsa en basit fallback: sayfayı tazele (server gate route yeniden sunar)
+          window.location.reload();
+        }
+      } catch(e){
+        // bağlantı sorunu vs: fallback
+        window.location.reload();
+      }
+    });
+  });
+})();
+</script>

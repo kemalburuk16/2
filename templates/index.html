@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Download Instagram Videos, Reels, Stories & Photos Free | InstaVido') }}{% endblock %}
+{% block meta_desc %}{{ _('Download any Instagram video, reel, story, photo or carousel in full quality. Free, fast, secure, no watermark. Paste your Instagram link and start downloading instantly!') }}{% endblock %}
+
+{% block header %}
+<style>
+  /* HERO başlık için modern tipografi */
+  .hero-title {
+    /* küçük ekranda 22px, tipik 4.6vw, masaüstünde 42px tavan */
+    font-size: clamp(22px, 4.6vw, 42px);
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin: 0;
+    padding: 0 10px;
+    color: #fff;
+    text-wrap: balance;              /* destekleyen tarayıcılarda satır dengesi */
+    text-shadow: 0 2px 8px rgba(0,0,0,.25);
+    max-width: 980px;                /* geniş ekranlarda çok yayılmasın */
+    margin-inline: auto;
+  }
+  /* Logo ile başlık arası ve mobil üst boşluk */
+  .index-hero .index-logo { display: block; }
+  @media (max-width: 575.98px){
+    .index-hero { padding-top: 2px; }
+  }
+</style>
+
+<div class="index-hero px-0"
+    style="background: linear-gradient(125deg,#55f 0%,#2df5d6 33%,#e17ef9 66%,#f991bf 100%);
+           min-height: 370px;
+           border-radius: 0 0 2.3rem 2.3rem;
+           box-shadow: 0 0px 0px #7c43b522, 0 1px 0 #fff4 inset;
+           display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+           margin-bottom: 1.5rem; position: relative; overflow: hidden; width:100%; max-width:100%;">
+    <!-- LOGO -->
+    <div class="mt-3 mb-2 w-100 d-flex justify-content-center">
+        <img src="/static/logo3.png" alt="InstaVido Logo" class="index-logo"
+            style="max-width:500px; width:34vw; min-width:170px; height:auto; filter: drop-shadow(0 7px 28px #6f47ffcc);">
+    </div>
+    <!-- Başlık -->
+    <div class="text-center mb-3 w-100 d-flex flex-column align-items-center">
+        <h1 class="hero-title">
+            {{ _('Download Instagram videos, reels, stories & photos for free!') }}
+        </h1>
+    </div>
+    <!-- FORM -->
+{% set action_url = url_for('index', lang=lang if lang else get_locale()) %}
+{% set placeholder = _('Paste your Instagram link here...') %}
+{% set ad_text = '' %}
+{% include "form.html" %}
+
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- FEATURES SECTION (SEO, LONG, DETAILED) ... -->
+<section class="container my-5">
+    <h2 class="text-center fw-bold mb-5" style="color:#7e39d1; font-size:2.2rem; letter-spacing:1px;">
+        {{ _('How to Download Instagram Media?') }}
+    </h2>
+    <div class="row align-items-stretch justify-content-center gy-5">
+        <div class="col-md-4 d-flex flex-column align-items-center">
+            <img src="/static/guide1.png" alt="{{ _('Copy Instagram Media Link') }}" class="img-fluid rounded shadow-sm mb-4" style="max-height:210px;">
+            <h3 class="h5 fw-bold text-center mb-2">{{ _('Copy the Link') }}</h3>
+            <p class="text-secondary text-center mb-0">
+                {{ _('Open the Instagram app or website.<br>Copy the link of the video, photo, reel, story or IGTV you want to download.')|safe }}
+            </p>
+        </div>
+        <div class="col-md-4 d-flex flex-column align-items-center">
+            <img src="/static/guide2.png" alt="{{ _('Paste the Link') }}" class="img-fluid rounded shadow-sm mb-4" style="max-height:210px;">
+            <h3 class="h5 fw-bold text-center mb-2">{{ _('Paste the Link') }}</h3>
+            <p class="text-secondary text-center mb-0">
+                {{ _('Return to InstaVido, paste the link into the input box above and click <b>Download</b>.')|safe }}
+            </p>
+        </div>
+        <div class="col-md-4 d-flex flex-column align-items-center">
+            <img src="/static/guide3.png" alt="{{ _('Download Media') }}" class="img-fluid rounded shadow-sm mb-4" style="max-height:210px;">
+            <h3 class="h5 fw-bold text-center mb-2">{{ _('Download the Media') }}</h3>
+            <p class="text-secondary text-center mb-0">
+                {{ _('Choose the quality option you prefer and download instantly.<br><b>Free, fast & secure!</b>')|safe }}
+            </p>
+        </div>
+    </div>
+</section>
+
+<section class="container my-5">
+    <h2 class="text-center fw-bold mb-4" style="color:#7e39d1; font-size:2rem; letter-spacing:1px;">
+        {{ _('All Features — Download Any Instagram Content!') }}
+    </h2>
+    <div class="row g-4">
+        <!-- 1. Photo Downloader -->
+        <div class="col-12 d-md-flex align-items-center mb-4">
+            <div class="flex-shrink-0 text-center mb-3 mb-md-0" style="width:130px;">
+                <img src="/static/feature_photo.png" alt="{{ _('Instagram Photo Downloader') }}" class="img-fluid rounded shadow" style="width:110px; height:110px; object-fit:cover;">
+            </div>
+            <div class="ms-md-4 flex-grow-1">
+                <h3 class="h5 fw-bold mb-2">{{ _('Instagram Photo Downloader') }}</h3>
+                <p class="mb-0 text-secondary">{{ _('Instagram photos capture special moments, travels, memories, and creative work from millions of users. With our Instagram Photo Downloader, you can save any public Instagram photo to your device in its original, high-definition quality. Simply copy the post link, paste it into the box above, and click Download—no registration, watermark, or login required! Perfect for saving your favorite images from public or business accounts for offline access, inspiration, or sharing with friends. InstaVido makes it effortless and secure to archive your most-loved Instagram images anytime, anywhere.') }}</p>
+            </div>
+        </div>
+        <!-- 2. Story Downloader (reverse) -->
+        <div class="col-12 d-md-flex align-items-center flex-md-row-reverse mb-4">
+            <div class="flex-shrink-0 text-center mb-3 mb-md-0" style="width:130px;">
+                <img src="/static/feature_story.png" alt="{{ _('Instagram Story Downloader') }}" class="img-fluid rounded shadow" style="width:110px; height:110px; object-fit:cover;">
+            </div>
+            <div class="me-md-4 flex-grow-1 text-md-end text-start">
+                <h3 class="h5 fw-bold mb-2">{{ _('Instagram Story Downloader') }}</h3>
+                <p class="mb-0 text-secondary">{{ _('Instagram Stories are temporary posts (photos or videos) that disappear after 24 hours. They often feature real-time moments, updates, or personal highlights that you don’t want to lose. With our Instagram Story Downloader, you can instantly download any public story before it’s gone—just copy the story link, paste it here, and save to your device in HD. No login needed. This is ideal for archiving memories, sharing viral moments, or keeping important updates. InstaVido helps you keep your favorite stories forever, completely free and private!') }}</p>
+            </div>
+        </div>
+        <!-- 3. Video Downloader -->
+        <div class="col-12 d-md-flex align-items-center mb-4">
+            <div class="flex-shrink-0 text-center mb-3 mb-md-0" style="width:130px;">
+                <img src="/static/feature_video.png" alt="{{ _('Instagram Video Downloader') }}" class="img-fluid rounded shadow" style="width:110px; height:110px; object-fit:cover;">
+            </div>
+            <div class="ms-md-4 flex-grow-1">
+                <h3 class="h5 fw-bold mb-2">{{ _('Instagram Video Downloader') }}</h3>
+                <p class="mb-0 text-secondary">{{ _('Instagram videos include everything from personal moments to viral clips and professional content. Our Instagram Video Downloader lets you save any video posted on a public Instagram profile—quickly, in the highest available quality, and without watermarks. Copy the video link from Instagram, paste it above, and hit Download. You’ll get your video ready for offline watching, sharing, or reposting—no account needed, no hidden costs. Download unlimited videos from Instagram fast and securely with InstaVido.') }}</p>
+            </div>
+        </div>
+        <!-- 4. Reels Downloader (reverse) -->
+        <div class="col-12 d-md-flex align-items-center flex-md-row-reverse mb-4">
+            <div class="flex-shrink-0 text-center mb-3 mb-md-0" style="width:130px;">
+                <img src="/static/feature_reels.png" alt="{{ _('Instagram Reels Downloader') }}" class="img-fluid rounded shadow" style="width:110px; height:110px; object-fit:cover;">
+            </div>
+            <div class="me-md-4 flex-grow-1 text-md-end text-start">
+                <h3 class="h5 fw-bold mb-2">{{ _('Instagram Reels Downloader') }}</h3>
+                <p class="mb-0 text-secondary">{{ _('Instagram Reels are short, creative videos designed for entertainment and discovery. Reels are a great way to find trending audio, funny clips, or viral moments. InstaVido’s Reels Downloader allows you to save any public Reel in full HD quality, with original audio. Copy the Reel link, paste it on our site, and download instantly—no login, no quality loss. Perfect for watching your favorite Reels offline, reposting to your own social media, or saving inspiring content for later. Always fast, safe, and watermark-free.') }}</p>
+            </div>
+        </div>
+        <!-- 5. IGTV Downloader -->
+        <div class="col-12 d-md-flex align-items-center mb-4">
+            <div class="flex-shrink-0 text-center mb-3 mb-md-0" style="width:130px;">
+                <img src="/static/feature_igtv.png" alt="{{ _('Instagram IGTV Downloader') }}" class="img-fluid rounded shadow" style="width:110px; height:110px; object-fit:cover;">
+            </div>
+            <div class="ms-md-4 flex-grow-1">
+                <h3 class="h5 fw-bold mb-2">{{ _('Instagram IGTV Downloader') }}</h3>
+                <p class="mb-0 text-secondary">{{ _('IGTV is Instagram’s platform for long-form videos—tutorials, interviews, documentaries, and more. Many influencers and creators publish their best work on IGTV. Our IGTV Downloader lets you download any public IGTV video, regardless of length, in the highest quality possible. Paste the IGTV link, click download, and enjoy offline viewing or archiving. Whether you’re studying, learning, or simply collecting valuable content, InstaVido makes IGTV downloads simple, secure, and always free.') }}</p>
+            </div>
+        </div>
+        <!-- 6. Carousel/Album Downloader (reverse) -->
+        <div class="col-12 d-md-flex align-items-center flex-md-row-reverse mb-4">
+            <div class="flex-shrink-0 text-center mb-3 mb-md-0" style="width:130px;">
+                <img src="/static/feature_album.png" alt="{{ _('Instagram Album Downloader') }}" class="img-fluid rounded shadow" style="width:110px; height:110px; object-fit:cover;">
+            </div>
+            <div class="me-md-4 flex-grow-1 text-md-end text-start">
+                <h3 class="h5 fw-bold mb-2">{{ _('Instagram Album / Carousel Downloader') }}</h3>
+                <p class="mb-0 text-secondary">{{ _('Instagram Albums (Carousels) let users post multiple photos and videos in a single post, perfect for stories, tutorials, or event galleries. Downloading each one by one can be a hassle! InstaVido’s Album Downloader fetches every image and video in the carousel, saving all media in the original order and quality—instantly and effortlessly. Just copy the album’s post link and download everything at once. No login, no watermark, no time wasted. Ideal for archiving multi-part content or keeping full galleries offline.') }}</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ / SSS: 40 SEO-Friendly Questions/Answers -->
+<section class="container my-5">
+  <h2 class="text-center fw-bold mb-4" style="color:#7e39d1; font-size:2rem; letter-spacing:1px;">
+    {{ _('Frequently Asked Questions about InstaVido.com') }}
+  </h2>
+  <div class="accordion" id="faqAccordion">
+
+    <!-- 1 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="faq1">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse1">
+          {{ _('Is InstaVido free and do I need to register?') }}
+        </button>
+      </h2>
+      <div id="faqCollapse1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          {{ _('Yes, InstaVido is completely free to use and does not require registration or login. Simply paste your Instagram link and start downloading instantly, without any hidden fees.') }}
+        </div>
+      </div>
+    </div>
+    <!-- 2 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="faq2">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse2">
+          {{ _('What types of Instagram content can I download?') }}
+        </button>
+      </h2>
+      <div id="faqCollapse2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          {{ _('You can download Instagram videos, reels, stories, photos, IGTV, and carousel/album posts from any public account using InstaVido.') }}
+        </div>
+      </div>
+    </div>
+    <!-- 3 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="faq3">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse3">
+          {{ _('Are there any limits to how many downloads I can make?') }}
+        </button>
+      </h2>
+      <div id="faqCollapse3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          {{ _('No, there are no daily or monthly limits. You can download as many public Instagram media files as you wish—completely free.') }}
+        </div>
+      </div>
+    </div>
+    <!-- 4 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="faq4">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse4">
+          {{ _('Does InstaVido work on mobile devices and tablets?') }}
+        </button>
+      </h2>
+      <div id="faqCollapse4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          {{ _('Absolutely! InstaVido is fully responsive and works perfectly on Android, iPhone, tablets, and desktop browsers. No app needed—just use your web browser.') }}
+        </div>
+      </div>
+    </div>
+    <!-- 5 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="faq5">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse5">
+          {{ _('Is it legal to download Instagram videos, reels, and photos?') }}
+        </button>
+      </h2>
+      <div id="faqCollapse5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          {{ _('You can download content for personal use. Do not repost, share, or use downloaded content for commercial purposes without the permission of the copyright owner. Always respect content creators’ rights.') }}
+        </div>
+      </div>
+    </div>
+    <!-- 6 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="faq6">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse6">
+          {{ _('Will the downloaded files have a watermark or quality loss?') }}
+        </button>
+      </h2>
+      <div id="faqCollapse6" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          {{ _('No, all videos and images are downloaded in the original quality and never have a watermark. You get exactly what’s on Instagram.') }}
+        </div>
+      </div>
+    </div>
+    <!-- 7 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="faq7">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse7">
+          {{ _('Can I download content from private or locked Instagram profiles?') }}
+        </button>
+      </h2>
+      <div id="faqCollapse7" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          {{ _('No, InstaVido only supports downloads from public Instagram accounts. Private or restricted profiles cannot be accessed or downloaded due to Instagram privacy rules.') }}
+        </div>
+      </div>
+    </div>
+    <!-- 8 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="faq8">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse8">
+          {{ _('Does InstaVido keep my download history or track users?') }}
+        </button>
+      </h2>
+      <div id="faqCollapse8" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          {{ _('Never. InstaVido does not store, track, or log any download activity. Your privacy is 100%% protected and anonymous.') }}
+        </div>
+      </div>
+    </div>
+    <!-- 9 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="faq9">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse9">
+          {{ _('How do I use InstaVido to download Instagram media?') }}
+        </button>
+      </h2>
+      <div id="faqCollapse9" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          {{ _('Copy the Instagram media link (video, reel, story, photo, etc.), paste it into the InstaVido input box above, and click Download. Your file will be ready in seconds!') }}
+        </div>
+      </div>
+    </div>
+    <!-- 10 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="faq10">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse10">
+          {{ _('Where are my downloaded files saved?') }}
+        </button>
+      </h2>
+      <div id="faqCollapse10" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          {{ _('Files are usually saved to your device’s Downloads folder. On mobile, check your recent files or Downloads folder in your browser.') }}
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}

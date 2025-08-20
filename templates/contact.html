@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block title %}{{ meta.title|default('Contact · InstaVido', true) }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <h1 class="mb-4">Contact Us</h1>
+  <p class="text-muted">Pick a tab below. Submitting will open your email client with a prefilled message.</p>
+
+  <div class="bg-white p-4 rounded shadow-sm">
+    <ul class="nav nav-tabs" id="contactTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button" role="tab">General</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="dmca-tab" data-bs-toggle="tab" data-bs-target="#dmca" type="button" role="tab">DMCA / Legal</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="privacy-tab" data-bs-toggle="tab" data-bs-target="#privacy" type="button" role="tab">Privacy Request</button>
+      </li>
+    </ul>
+
+    <div class="tab-content mt-4">
+      <!-- General -->
+      <div class="tab-pane fade show active" id="general" role="tabpanel" aria-labelledby="general-tab">
+        <form onsubmit="return sendGeneral()">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Your email</label>
+              <input type="email" id="genEmail" class="form-control" placeholder="you@example.com" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Subject</label>
+              <input type="text" id="genSubject" class="form-control" placeholder="Question about InstaVido" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Message</label>
+              <textarea id="genMessage" class="form-control" rows="5" placeholder="Type your message..." required></textarea>
+            </div>
+          </div>
+          <div class="mt-3">
+            <button class="btn btn-primary"><i class="bi bi-envelope-paper me-1"></i> Open Email</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- DMCA / Legal -->
+      <div class="tab-pane fade" id="dmca" role="tabpanel" aria-labelledby="dmca-tab">
+        <p class="small text-muted">We follow a notice-and-takedown process. Provide complete and accurate details.</p>
+        <form onsubmit="return sendDMCA()">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Your name / Company</label>
+              <input type="text" id="dmcaName" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Email</label>
+              <input type="email" id="dmcaEmail" class="form-control" required>
+            </div>
+            <div class="col-md-12">
+              <label class="form-label">Postal address</label>
+              <input type="text" id="dmcaAddress" class="form-control" required>
+            </div>
+            <div class="col-md-12">
+              <label class="form-label">Infringing URL(s)</label>
+              <textarea id="dmcaURLs" class="form-control" rows="2" placeholder="One per line" required></textarea>
+            </div>
+            <div class="col-md-12">
+              <label class="form-label">Describe the copyrighted work</label>
+              <textarea id="dmcaWork" class="form-control" rows="3" required></textarea>
+            </div>
+            <div class="col-md-12">
+              <label class="form-label">Statement (required)</label>
+              <textarea id="dmcaStmt" class="form-control" rows="3" required>Good‑faith belief: the use is not authorized by the copyright owner, its agent, or the law. I am authorized to act for the owner and the information is accurate.</textarea>
+            </div>
+          </div>
+          <div class="mt-3">
+            <button class="btn btn-danger"><i class="bi bi-shield-lock me-1"></i> Open DMCA Email</button>
+            <span class="small text-muted ms-2">Your email client will open a draft to <strong>legal@instavido.com</strong> (cc <strong>support@instavido.com</strong>).</span>
+          </div>
+        </form>
+      </div>
+
+      <!-- Privacy -->
+      <div class="tab-pane fade" id="privacy" role="tabpanel" aria-labelledby="privacy-tab">
+        <p class="small text-muted">For GDPR/UK GDPR/CCPA requests, use this template. We may ask for limited information to verify your identity.</p>
+        <form onsubmit="return sendPrivacy()">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Your email</label>
+              <input type="email" id="prEmail" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Request type</label>
+              <select id="prType" class="form-select" required>
+                <option value="Access">Access</option>
+                <option value="Deletion">Deletion</option>
+                <option value="Correction">Correction</option>
+                <option value="Portability">Portability</option>
+                <option value="Objection/Restriction">Objection/Restriction</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Details (optional)</label>
+              <textarea id="prDetails" class="form-control" rows="4" placeholder="Add any details that will help us locate your data (e.g., approximate dates, country, browser)."></textarea>
+            </div>
+          </div>
+          <div class="mt-3">
+            <button class="btn btn-success"><i class="bi bi-file-earmark-lock me-1"></i> Open Privacy Email</button>
+            <span class="small text-muted ms-2">To <strong>privacy@instavido.com</strong>.</span>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <hr class="mt-4">
+    <p class="small text-muted mb-0">We may respond in English. Legal requests must include all required elements.</p>
+  </div>
+</div>
+
+<script>
+  function enc(s){return encodeURIComponent(s||'');}
+  function openMail(to, cc, subject, body){
+    const ccPart = cc ? '&cc=' + enc(cc) : '';
+    const url = `mailto:${to}?subject=${enc(subject)}${ccPart}&body=${enc(body)}`;
+    window.location.href = url;
+    return false;
+  }
+
+  function val(id){ return (document.getElementById(id)?.value || '').trim(); }
+
+  function sendGeneral(){
+    const email = val('genEmail');
+    const subj  = val('genSubject') || 'InstaVido Inquiry';
+    const msg   = val('genMessage');
+    const body  = `From: ${email}\n\n${msg}\n\n— Sent via Contact page`;
+    return openMail('support@instavido.com', '', subj, body);
+  }
+
+  function sendDMCA(){
+    const n  = val('dmcaName');
+    const e  = val('dmcaEmail');
+    const a  = val('dmcaAddress');
+    const u  = val('dmcaURLs');
+    const w  = val('dmcaWork');
+    const st = val('dmcaStmt');
+    const subject = 'DMCA Takedown Request';
+    const body = `Name/Company: ${n}\nEmail: ${e}\nAddress: ${a}\n\nWork described:\n${w}\n\nInfringing URLs:\n${u}\n\nStatements:\n${st}\n\nSignature:\n${n}\n\n— Sent via Contact page`;
+    return openMail('legal@instavido.com','support@instavido.com', subject, body);
+  }
+
+  function sendPrivacy(){
+    const e  = val('prEmail');
+    const t  = val('prType');
+    const d  = val('prDetails');
+    const subject = `Privacy Request (${t})`;
+    const body = `Requester email: ${e}\nRequest type: ${t}\n\nDetails:\n${d}\n\nI confirm I am the data subject or authorized to act on their behalf.`;
+    return openMail('privacy@instavido.com','', subject, body);
+  }
+</script>
+{% endblock %}

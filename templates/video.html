@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Download Instagram Videos Free | InstaVido') }}{% endblock %}
+{% block meta_desc %}{{ _('Download any Instagram video from public profiles in high quality. Fast, free and no watermark. Paste your Instagram video link and start downloading instantly!') }}{% endblock %}
+
+{% block header %}
+<div class="page-hero"
+     style="background: linear-gradient(125deg,#55f 0%,#2df5d6 33%,#e17ef9 66%,#f991bf 100%);
+            min-height: 370px;
+            border-radius: 0 0 2.3rem 2.3rem;
+            box-shadow: 0 0px 0px #7c43b522, 0 1px 0 #fff4 inset;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            margin-bottom: 1.5rem; position: relative; overflow: hidden; width:100%; max-width:100%;">
+  
+  <!-- LOGO -->
+  <div class="mt-3 mb-2 w-100 d-flex justify-content-center">
+    <img src="/static/logo3.png" alt="InstaVido Logo" class="page-logo"
+         style="max-width:500px; width:34vw; min-width:170px; height:auto;
+                filter: drop-shadow(0 7px 28px #6f47ffcc);">
+  </div>
+
+  <!-- Başlık -->
+  <div class="text-center mb-3 w-100 d-flex flex-column align-items-center">
+    <h1 class="hero-title hero--md">
+      {{ _('Download Instagram Videos in HD — Fast, Free & Secure!') }}
+    </h1>
+    <p class="text-white fw-semibold" style="max-width:620px; font-size:1.1rem; text-shadow:0 1px 6px #0002;">
+      {{ _('Paste your Instagram video link below to download instantly. No watermark, no signup — completely free!') }}
+    </p>
+  </div>
+
+  <!-- FORM (Video için) -->
+  {% set action_url = url_for('index', lang=lang if lang else get_locale()) %}
+  {% set placeholder = _('Paste your Instagram video link here...') %}
+  {% set ad_text = '' %}
+  {% include "form.html" %}
+
+  <!-- JS (Paste Button) -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function(){
+      const pasteBtn = document.getElementById('pasteBtn');
+      const input    = document.getElementById('instagram_url');
+      if (navigator.clipboard) {
+        pasteBtn.onclick = () =>
+          navigator.clipboard.readText().then(txt => {
+            input.value = txt;
+            input.focus();
+          });
+      } else {
+        pasteBtn.disabled = true;
+      }
+    });
+  </script>
+
+{% endblock %}
+
+{% block content %}
+<section class="container my-5">
+  <div class="row justify-content-center align-items-start">
+    <!-- Sol Metin -->
+    <div class="col-md-6">
+      <h2 class="fw-bold mb-4" style="color:#7e39d1;">🎬 {{ _('How to Download Instagram Videos?') }}</h2>
+      <p class="text-muted fs-5 mb-4">
+        {{ _('Downloading Instagram videos has never been easier. With InstaVido, you can save your favorite reels, posts, or stories in high quality without logging in. Follow these quick steps:') }}
+      </p>
+
+      <ul class="list-unstyled text-muted fs-6">
+        <li class="mb-3">
+          ✅ <strong>{{ _('Find the video:') }}</strong> {{ _('Open the Instagram app or website and navigate to the video you want to save.') }}
+        </li>
+        <li class="mb-3">
+          ✅ <strong>{{ _('Copy the link:') }}</strong> {{ _('Tap the three dots (...) on the post and choose') }} <em>{{ _('"Copy link"') }}</em> {{ _('to copy the video URL.') }}
+        </li>
+        <li class="mb-3">
+          ✅ <strong>{{ _('Paste into InstaVido:') }}</strong> {{ _('Return to InstaVido.com, paste the link into the box, and click') }} <strong>{{ _('Download') }}</strong>.
+        </li>
+        <li class="mb-3">
+          ✅ <strong>{{ _('Enjoy offline:') }}</strong> {{ _('Your video will be ready in seconds — high quality, no watermark, and completely free.') }}
+        </li>
+      </ul>
+
+      <p class="text-muted mt-4">
+        {{ _("InstaVido is designed for speed, simplicity, and security. Whether it's a funny reel or a valuable tutorial, save it forever with just one click!") }}
+      </p>
+    </div>
+
+    <!-- Sağ Görsel -->
+    <div class="col-md-6 text-center mt-4 mt-md-0">
+      <img src="/static/page3.png" alt="{{ _('Instagram Video Download') }}" class="img-fluid rounded shadow-lg" style="max-height:420px;">
+    </div>
+  </div>
+</section>
+
+<section class="container my-5">
+  <h2 class="text-center fw-bold mb-5" style="color:#7e39d1; font-size:2.2rem; letter-spacing:1px;">
+    {{ _('Turn Instagram Videos Into Downloads – Fast & Free') }}
+  </h2>
+  <div class="row align-items-stretch justify-content-center gy-5">
+    <!-- Adım 1 -->
+    <div class="col-md-4 d-flex flex-column align-items-center">
+      <img src="/static/guide1.png" alt="{{ _('Copy Instagram Video Link') }}" class="img-fluid rounded shadow-sm mb-4" style="max-height:210px;">
+      <h3 class="h5 fw-bold text-center mb-2">{{ _('Copy the Video Link') }}</h3>
+      <p class="text-secondary text-center mb-0">
+        {{ _('Open the Instagram app or website.') }}<br>
+        {{ _('Find the video you want and copy its link from the share menu.') }}
+      </p>
+    </div>
+    <!-- Adım 2 -->
+    <div class="col-md-4 d-flex flex-column align-items-center">
+      <img src="/static/guide2.png" alt="{{ _('Paste the Video Link') }}" class="img-fluid rounded shadow-sm mb-4" style="max-height:210px;">
+      <h3 class="h5 fw-bold text-center mb-2">{{ _('Paste into InstaVido') }}</h3>
+      <p class="text-secondary text-center mb-0">
+        {{ _('Go to InstaVido.com, paste the copied video link into the box above, and click') }} <b>{{ _('Download') }}</b>.
+      </p>
+    </div>
+    <!-- Adım 3 -->
+    <div class="col-md-4 d-flex flex-column align-items-center">
+      <img src="/static/guide3.png" alt="{{ _('Download Instagram Video') }}" class="img-fluid rounded shadow-sm mb-4" style="max-height:210px;">
+      <h3 class="h5 fw-bold text-center mb-2">{{ _('Download the Video') }}</h3>
+      <p class="text-secondary text-center mb-0">
+        {{ _('Choose your preferred video quality and download it instantly.') }}<br>
+        <b>{{ _('Fast, easy & watermark-free!') }}</b>
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="container my-5">
+  <h2 class="text-center fw-bold mb-5" style="color:#7e39d1;">
+    🎥 {{ _('Frequently Asked Questions – Instagram Video Downloader') }}
+  </h2>
+  <div class="accordion" id="videoFaqAccordion">
+    <!-- FAQ 1 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="q1">
+        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#a1">
+          1. {{ _('How do I download Instagram videos with InstaVido?') }}
+        </button>
+      </h2>
+      <div id="a1" class="accordion-collapse collapse show" data-bs-parent="#videoFaqAccordion">
+        <div class="accordion-body">
+          {{ _("Just copy the video link from Instagram, paste it into InstaVido’s download box, and click download. It’s fast, free, and works on both mobile and desktop.") }}
+        </div>
+      </div>
+    </div>
+    <!-- FAQ 2 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="q2">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#a2">
+          2. {{ _('Do I need an Instagram account to download videos?') }}
+        </button>
+      </h2>
+      <div id="a2" class="accordion-collapse collapse" data-bs-parent="#videoFaqAccordion">
+        <div class="accordion-body">
+          {{ _('No account or login is required. You can download Instagram videos completely anonymously by just using the public video link with InstaVido.') }}
+        </div>
+      </div>
+    </div>
+    <!-- FAQ 3 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="q3">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#a3">
+          3. {{ _('Can I download Instagram Reels and IGTV videos too?') }}
+        </button>
+      </h2>
+      <div id="a3" class="accordion-collapse collapse" data-bs-parent="#videoFaqAccordion">
+        <div class="accordion-body">
+          {{ _('Yes! InstaVido supports Reels, IGTV, and all regular Instagram video posts. Just paste the link and get your video file in seconds — fast and watermark-free.') }}
+        </div>
+      </div>
+    </div>
+    <!-- FAQ 4 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="q4">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#a4">
+          4. {{ _('Is there a limit on how many videos I can download?') }}
+        </button>
+      </h2>
+      <div id="a4" class="accordion-collapse collapse" data-bs-parent="#videoFaqAccordion">
+        <div class="accordion-body">
+          {{ _('No limits at all. You can download as many public Instagram videos as you want. InstaVido is completely free to use and does not restrict usage or bandwidth.') }}
+        </div>
+      </div>
+    </div>
+    <!-- FAQ 5 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="q5">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#a5">
+          5. {{ _('Can I download videos in high definition (HD)?') }}
+        </button>
+      </h2>
+      <div id="a5" class="accordion-collapse collapse" data-bs-parent="#videoFaqAccordion">
+        <div class="accordion-body">
+          {{ _('Yes, if the original Instagram video was uploaded in HD, InstaVido will fetch and provide the highest available quality for download automatically.') }}
+        </div>
+      </div>
+    </div>
+    <!-- FAQ 6 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="q6">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#a6">
+          6. {{ _('Why won’t the Instagram video download?') }}
+        </button>
+      </h2>
+      <div id="a6" class="accordion-collapse collapse" data-bs-parent="#videoFaqAccordion">
+        <div class="accordion-body">
+          {{ _("Make sure the video is public. Private accounts or expired links won't work. Also double-check that the copied URL is complete and valid.") }}
+        </div>
+      </div>
+    </div>
+    <!-- FAQ 7 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="q7">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#a7">
+          7. {{ _('Is the downloaded video free of watermarks?') }}
+        </button>
+      </h2>
+      <div id="a7" class="accordion-collapse collapse" data-bs-parent="#videoFaqAccordion">
+        <div class="accordion-body">
+          {{ _('Yes. InstaVido delivers clean video files with no branding or watermarks. You’ll receive the same content as posted, without any alterations.') }}
+        </div>
+      </div>
+    </div>
+    <!-- FAQ 8 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="q8">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#a8">
+          8. {{ _('Can I download videos from private Instagram accounts?') }}
+        </button>
+      </h2>
+      <div id="a8" class="accordion-collapse collapse" data-bs-parent="#videoFaqAccordion">
+        <div class="accordion-body">
+          {{ _('No, InstaVido respects privacy. Only content from public Instagram profiles can be downloaded. Private videos cannot be accessed or saved via link.') }}
+        </div>
+      </div>
+    </div>
+    <!-- FAQ 9 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="q9">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#a9">
+          9. {{ _('Does InstaVido work on both PC and mobile?') }}
+        </button>
+      </h2>
+      <div id="a9" class="accordion-collapse collapse" data-bs-parent="#videoFaqAccordion">
+        <div class="accordion-body">
+          {{ _('Yes, InstaVido is fully responsive and optimized for all devices. You can download Instagram videos easily on desktop, tablet, or smartphone browsers.') }}
+        </div>
+      </div>
+    </div>
+    <!-- FAQ 10 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="q10">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#a10">
+          10. {{ _('Can I save Instagram Stories as video files too?') }}
+        </button>
+      </h2>
+      <div id="a10" class="accordion-collapse collapse" data-bs-parent="#videoFaqAccordion">
+        <div class="accordion-body">
+          {{ _('Yes! If the story is a video and publicly available, InstaVido will detect it and let you download it just like any other Instagram video content.') }}
+        </div>
+      </div>
+    </div>
+    <!-- FAQ 11 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="q11">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#a11">
+          11. {{ _('What makes InstaVido different from other downloaders?') }}
+        </button>
+      </h2>
+      <div id="a11" class="accordion-collapse collapse" data-bs-parent="#videoFaqAccordion">
+        <div class="accordion-body">
+          {{ _('InstaVido is clean, fast, and secure. It supports multiple Instagram formats like videos, reels, stories, and offers one-click download without registration.') }}
+        </div>
+      </div>
+    </div>
+    <!-- FAQ 12 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="q12">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#a12">
+          12. {{ _('Is InstaVido completely free to use?') }}
+        </button>
+      </h2>
+      <div id="a12" class="accordion-collapse collapse" data-bs-parent="#videoFaqAccordion">
+        <div class="accordion-body">
+          {{ _('Yes. InstaVido will always remain a free tool for downloading Instagram content. There are no hidden fees, subscriptions, or usage restrictions.') }}
+        </div>
+      </div>
+    </div>
+    <!-- FAQ 13 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="q13">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#a13">
+          13. {{ _('Do you store user data or download history?') }}
+        </button>
+      </h2>
+      <div id="a13" class="accordion-collapse collapse" data-bs-parent="#videoFaqAccordion">
+        <div class="accordion-body">
+          {{ _('No. InstaVido does not store any personal data or download logs. All requests are handled anonymously and no tracking is done in the background.') }}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

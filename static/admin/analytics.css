@@ -1,0 +1,10 @@
+.stat-card { background: linear-gradient(90deg, #e0eafc 0%, #cfdef3 100%); border-radius: 18px; }
+.card { border-radius: 16px; }
+.card .card-body h6, .card-title { font-weight: 500; }
+.nav-tabs .nav-link.active { background: #f2f5fd; border-bottom: 2px solid #654ff0; font-weight: bold; color: #654ff0; }
+.display-5 { font-size: 2.3rem; font-weight: bold; color: #654ff0; }
+.table thead th { background: #f8fafc; }
+.table tbody tr:nth-child(even) { background: #f3f6fb; }
+.bi-info-circle-fill { color: #999; font-size: 1rem; cursor: pointer; }
+canvas { background: #fcfcff; border-radius: 12px; }
+.form-text { color: #666; }

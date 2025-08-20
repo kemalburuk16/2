@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+
+{% block title %}Download Instagram Photos Free | InstaVido{% endblock %}
+{% block meta_desc %}Download any Instagram photo from public profiles in original quality. Fast, free and no watermark. Paste your Instagram photo link and start downloading instantly!{% endblock %}
+
+{% block header %}
+<div class="page-hero"
+     style="background: linear-gradient(125deg,#55f 0%,#2df5d6 33%,#e17ef9 66%,#f991bf 100%);
+            min-height: 370px;
+            border-radius: 0 0 2.3rem 2.3rem;
+            box-shadow: 0 0px 0px #7c43b522, 0 1px 0 #fff4 inset;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            margin-bottom: 1.5rem; position: relative; overflow: hidden; width:100%; max-width:100%;">
+    
+    <!-- LOGO -->
+    <div class="mt-3 mb-2 w-100 d-flex justify-content-center">
+        <img src="/static/logo3.png" alt="InstaVido Logo" class="page-logo"
+            style="max-width:500px; width:34vw; min-width:170px; height:auto;
+                   filter: drop-shadow(0 7px 28px #6f47ffcc);">
+    </div>
+
+    <!-- Başlık -->
+    <div class="text-center mb-3 w-100 d-flex flex-column align-items-center">
+        <h1 class="hero-title hero--md">
+            {{ _('Download Instagram Photos for Free!') }}
+        </h1>
+    </div>
+
+    {% set action_url = url_for('index', lang=lang if lang else get_locale()) %}
+    {% set placeholder = _('Paste your Instagram link here...') %}
+    {% set ad_text = '' %}
+    {% include "form.html" %}
+
+    <!-- JS (Paste Button) -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function(){
+            const pasteBtn = document.getElementById('pasteBtn');
+            const input = document.getElementById('instagram_url');
+            if (navigator.clipboard) {
+                pasteBtn.onclick = function() {
+                    navigator.clipboard.readText().then(txt => {
+                        input.value = txt;
+                        input.focus();
+                    });
+                };
+            } else {
+                pasteBtn.disabled = true;
+            }
+        });
+    </script>
+
+{% endblock %}
+
+{% block content %}
+<section class="container my-5">
+    <h2 class="text-center fw-bold mb-5" style="color:#7e39d1; font-size:2.2rem; letter-spacing:1px;">
+        How to Download Instagram Photos?
+    </h2>
+    <div class="row align-items-stretch justify-content-center gy-5">
+        <div class="col-md-4 d-flex flex-column align-items-center">
+            <img src="/static/guide1.png" alt="Copy Instagram Link" class="img-fluid rounded shadow-sm mb-4" style="max-height:210px;">
+            <h3 class="h5 fw-bold text-center mb-2">Copy the Link</h3>
+            <p class="text-secondary text-center mb-0">
+                Open the Instagram app or website.<br>
+                Copy the link of the photo you want to download.
+            </p>
+        </div>
+        <div class="col-md-4 d-flex flex-column align-items-center">
+            <img src="/static/guide2.png" alt="Paste the Link" class="img-fluid rounded shadow-sm mb-4" style="max-height:210px;">
+            <h3 class="h5 fw-bold text-center mb-2">Paste the Link</h3>
+            <p class="text-secondary text-center mb-0">
+                Return to InstaVido, paste the link into the box above, and click <b>Download</b>.
+            </p>
+        </div>
+        <div class="col-md-4 d-flex flex-column align-items-center">
+            <img src="/static/guide3.png" alt="Download Photo" class="img-fluid rounded shadow-sm mb-4" style="max-height:210px;">
+            <h3 class="h5 fw-bold text-center mb-2">Download Photo</h3>
+            <p class="text-secondary text-center mb-0">
+                Choose your desired quality and download instantly.<br>
+                <b>Free, fast & secure!</b>
+            </p>
+        </div>
+    </div>
+</section>
+
+<section class="container my-5">
+    <div class="row align-items-center">
+        <!-- Sol Görsel -->
+        <div class="col-md-5 text-center mb-4 mb-md-0">
+            <img src="/static/feature_photo.png" alt="Instagram Photo Download" class="img-fluid rounded shadow-lg" style="max-height:400px;">
+        </div>
+
+        <!-- Dikey Çizgi -->
+        <div class="col-md-1 d-none d-md-flex justify-content-center">
+            <div style="width:2px; height:80%; background-color:#ccc;"></div>
+        </div>
+
+        <!-- Sağ Metin -->
+        <div class="col-md-6">
+            <h2 class="fw-bold mb-3" style="color:#7e39d1;">📷 Download Instagram Photos in Seconds</h2>
+            <p class="text-muted fs-5 mb-4">
+                InstaVido allows you to download high-quality Instagram photos quickly and easily. Whether it's a single post or a carousel album, saving images is just a link away.
+            </p>
+            <div class="text-muted fs-6">
+                <p class="mb-2">🖼️ Save any public Instagram photo</p>
+                <p class="mb-2">🔗 Just copy the photo link and paste it here</p>
+                <p class="mb-2">💾 No app or login required</p>
+                <p class="mb-0">⚡ Fast, secure, and always free!</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="container my-5">
+  <h2 class="text-center fw-bold mb-5" style="color:#7e39d1;">
+    📚 Frequently Asked Questions About Downloading Instagram Photos
+  </h2>
+  <div class="accordion" id="faqAccordion">
+
+    <!-- 1 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="faq1">
+        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1content">
+          1. How can I download photos from Instagram using InstaVido?
+        </button>
+      </h2>
+      <div id="faq1content" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          To download an Instagram photo, copy the photo's link, paste it into the InstaVido search bar, and click "Download" to save it in high resolution instantly.
+        </div>
+      </div>
+    </div>
+
+    <!-- 2 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="faq2">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2content">
+          2. Is it possible to download Instagram photos without logging in?
+        </button>
+      </h2>
+      <div id="faq2content" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          Yes! InstaVido doesn’t require any login or registration. Simply paste the public Instagram photo link and download it safely without revealing your identity.
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="faq3">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3content">
+          3. Can I download all photos from a multi-image Instagram post?
+        </button>
+      </h2>
+      <div id="faq3content" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          Absolutely! InstaVido detects carousel (album) posts and lets you download each individual photo from the same post with ease and full image quality.
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="faq4">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4content">
+          4. Does InstaVido work on smartphones and tablets?
+        </button>
+      </h2>
+      <div id="faq4content" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          Yes, InstaVido is mobile-friendly and works seamlessly on iOS and Android devices, allowing users to download Instagram photos directly from any mobile browser.
+        </div>
+      </div>
+    </div>
+
+    <!-- 5 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="faq5">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5content">
+          5. Are downloaded Instagram photos the same quality as the original?
+        </button>
+      </h2>
+      <div id="faq5content" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          Yes, InstaVido always tries to provide the highest resolution image available from the Instagram post so that you get the best possible quality without loss.
+        </div>
+      </div>
+    </div>
+
+    <!-- 6 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="faq6">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq6content">
+          6. Why can’t I download a specific Instagram photo?
+        </button>
+      </h2>
+      <div id="faq6content" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          If the Instagram post is private or the link is broken, InstaVido won't be able to access it. Make sure you’re using a valid URL from a public profile.
+        </div>
+      </div>
+    </div>
+
+    <!-- 7 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="faq7">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq7content">
+          7. Can I download photos from private Instagram accounts?
+        </button>
+      </h2>
+      <div id="faq7content" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          No. InstaVido only works with publicly accessible Instagram content. It cannot retrieve or download media from private or restricted profiles due to privacy rules.
+        </div>
+      </div>
+    </div>
+
+    <!-- 8 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="faq8">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq8content">
+          8. Is it legal to download Instagram photos using InstaVido?
+        </button>
+      </h2>
+      <div id="faq8content" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          Downloading photos is legal for personal use. However, reposting or using content commercially without permission from the creator may violate copyright laws.
+        </div>
+      </div>
+    </div>
+
+    <!-- 9 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="faq9">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq9content">
+          9. Will my activity be tracked while downloading photos?
+        </button>
+      </h2>
+      <div id="faq9content" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          No. InstaVido doesn’t track user activity, store download history, or collect personal data. All downloads are handled securely and anonymously for your safety.
+        </div>
+      </div>
+    </div>
+
+    <!-- 10 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="faq10">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq10content">
+          10. Can I download Instagram profile pictures using InstaVido?
+        </button>
+      </h2>
+      <div id="faq10content" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          Currently, InstaVido focuses on downloading post content such as photos, reels, and stories. Profile picture download support may be added in future updates.
+        </div>
+      </div>
+    </div>
+
+    <!-- Genel InstaVido Soruları -->
+
+    <!-- 11 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="faq11">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq11content">
+          11. What is InstaVido and how does it work?
+        </button>
+      </h2>
+      <div id="faq11content" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          InstaVido is a free online Instagram downloader that helps users save media content including photos, videos, reels, stories, and albums without any app.
+        </div>
+      </div>
+    </div>
+
+    <!-- 12 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="faq12">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq12content">
+          12. Is InstaVido safe and secure to use?
+        </button>
+      </h2>
+      <div id="faq12content" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          Yes, InstaVido is 100% safe. It doesn’t require login, doesn’t store personal information, and uses secure connections for all media processing.
+        </div>
+      </div>
+    </div>
+
+    <!-- 13 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="faq13">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq13content">
+          13. Does InstaVido work with other platforms like TikTok or YouTube?
+        </button>
+      </h2>
+      <div id="faq13content" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          No. InstaVido is specifically designed for Instagram content only. For other platforms like TikTok or YouTube, you may need to use platform-specific tools.
+        </div>
+      </div>
+    </div>
+
+    <!-- 14 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="faq14">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq14content">
+          14. Is InstaVido really free to use forever?
+        </button>
+      </h2>
+      <div id="faq14content" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          Yes! InstaVido is completely free to use with no hidden charges. You can download unlimited Instagram photos and videos without any subscriptions or fees.
+        </div>
+      </div>
+    </div>
+
+    <!-- 15 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="faq15">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq15content">
+          15. Will InstaVido work if Instagram changes its algorithm?
+        </button>
+      </h2>
+      <div id="faq15content" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          InstaVido is regularly updated to stay compatible with Instagram’s changes. If issues arise, we fix them promptly to keep downloads smooth and reliable.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section class="container my-5">
+  <div class="row align-items-center">
+    
+    <!-- Sol Metin -->
+    <div class="col-md-6">
+      <h2 class="fw-bold mb-3" style="color:#7e39d1;">
+        😊 How InstaVido Makes People Happy
+      </h2>
+      <p class="text-muted fs-5">
+        InstaVido brings joy to millions by offering a fast, free, and secure way to download Instagram content without login. Whether it's a cherished photo, a memorable story, or a stunning reel, users can save moments effortlessly in high quality. With its mobile-friendly design and one-click download feature, InstaVido eliminates the hassle and lets users enjoy Instagram media offline anytime. Simple, powerful, and privacy-respecting—this is what makes InstaVido so loved.
+      </p>
+    </div>
+
+    <!-- Sağ Görsel -->
+    <div class="col-md-6 text-center mt-4 mt-md-0">
+      <img src="/static/page4.png" alt="Happy InstaVido Users" class="img-fluid rounded shadow-lg" style="max-height:420px;">
+    </div>
+    
+  </div>
+</section>
+
+
+{% endblock %}

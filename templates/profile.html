@@ -1,0 +1,595 @@
+{% extends "base.html" %}
+{% block title %}{{ profile.username if profile else 'Profile' }} · InstaVido{% endblock %}
+{% block meta_desc %}{{ _('View & download an Instagram profile: posts, stories, highlights and reels.') }}{% endblock %}
+
+{% block header %}
+<div class="w-100" style="min-height:140px;border-radius:0 0 18px 18px;
+  background:radial-gradient(1200px 360px at 20% -50%,#ff8bd6 0%,#6f47ff 40%,#59c7f9 72%,#36d1dc 100%);"></div>
+{% endblock %}
+
+{% block content %}
+{% from "ads/macros.html" import render_ad %}
+
+<style>
+  /* ---- HERO ---- */
+  .pr-hero{position:relative;margin-top:-90px;margin-bottom:16px;border-radius:18px;padding:18px;color:#fff;
+    background:linear-gradient(90deg,rgba(111,71,255,.95),rgba(89,199,249,.95));box-shadow:0 14px 44px rgba(33,22,88,.22)}
+  .pr-hero-inner{display:flex;align-items:flex-start;gap:16px}
+  .pr-avatar{width:110px;height:110px;border-radius:50%;overflow:hidden;flex:0 0 auto;box-shadow:0 6px 24px rgba(0,0,0,.25);border:3px solid rgba(255,255,255,.65)}
+  .pr-avatar img{width:100%;height:100%;object-fit:cover}
+  .pr-meta{flex:1 1 auto;min-width:0}
+  .pr-username{display:flex;align-items:center;gap:8px;font-size:1.65rem;font-weight:800;letter-spacing:.2px}
+  .pr-stats{display:flex;gap:18px;margin:6px 0 8px 0;flex-wrap:wrap}
+  .pr-stat{font-weight:800}.pr-stat small{display:block;font-weight:600;opacity:.85;margin-top:-2px}
+  .pr-bio{font-weight:600;line-height:1.35;opacity:.95;word-break:break-word}
+  .pr-cta{margin-left:auto;display:flex;gap:8px;align-items:flex-start}
+  .btn-new{background:linear-gradient(135deg,#6f47ff,#59c7f9);color:#fff;border:0;border-radius:999px;padding:10px 14px;font-weight:800;box-shadow:0 6px 16px rgba(95,120,255,.28)}
+  @media (max-width:768px){.pr-hero-inner{flex-direction:column}.pr-cta{margin-left:0}.pr-username{font-size:1.35rem}.pr-avatar{width:86px;height:86px}}
+
+  /* ---- TABS ---- */
+  .pr-tabs{margin-top:10px}
+  .nav-pr{display:flex;gap:8px;overflow:auto;padding:6px;border-radius:12px;background:linear-gradient(90deg,#f4f1ff,#eaf7ff);border:1px solid #e8e5ff}
+  .nav-pr .nav-link{border:0;border-radius:10px;padding:10px 14px;font-weight:800;color:#6b59fd;white-space:nowrap}
+  .nav-pr .nav-link.active{color:#fff;background:linear-gradient(135deg,#6f47ff,#59c7f9);box-shadow:0 4px 14px rgba(111,71,255,.25)}
+
+  /* ---- GRID ---- */
+  .pr-grid{display:grid;gap:14px;margin-top:14px}
+  @media (max-width:575.98px){.pr-grid{grid-template-columns:1fr}}
+  @media (min-width:576px) and (max-width:991.98px){.pr-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media (min-width:992px){.pr-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+  .pr-card{position:relative;border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 8px 24px rgba(0,0,0,.08)}
+  .thumb-wrap{position:relative;padding:10px}
+  .nine16{position:relative;width:100%;aspect-ratio:9/16;border-radius:14px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#000}
+  .square{position:relative;width:100%;aspect-ratio:1/1;border-radius:14px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#000}
+  .nine16 img,.square img{width:100%;height:100%;object-fit:cover;display:block}
+
+  .frame-video{border:3px solid transparent;background:linear-gradient(#0000,#0000) padding-box,linear-gradient(45deg,#ff58b1,#b96bff,#59c7f9,#ff58b1) border-box;background-size:200% 200%;animation:spinGrad 6s ease infinite;border-radius:16px}
+  .frame-photo{border:3px solid transparent;background:linear-gradient(#0000,#0000) padding-box,linear-gradient(135deg,#1dd1a1,#36d1dc) border-box;border-radius:16px}
+  @keyframes spinGrad{0%{background-position:0 0}50%{background-position:100% 100%}100%{background-position:0 0}}
+
+  .zoom-btn{position:absolute;right:12px;top:12px;z-index:3;border:0;width:36px;height:36px;border-radius:50%;background:#fff;color:#6b59fd;box-shadow:0 2px 12px rgba(66,52,140,.25);display:flex;align-items:center;justify-content:center;cursor:pointer}
+
+  .badges{position:absolute;left:12px;top:12px;z-index:3;display:flex;gap:6px;flex-wrap:wrap}
+  .badge-chip{display:inline-flex;align-items:center;gap:6px;background:#ffffffee;color:#3b2f7a;border-radius:999px;padding:6px 9px;font-weight:800;font-size:.85rem;box-shadow:0 2px 10px rgba(0,0,0,.16)}
+  .badge-chip .bi{font-size:1rem;opacity:.9}
+
+  .pr-actions{padding:10px 12px 14px;display:flex;justify-content:center;border-top:1px solid #f6f4ff}
+  .btn-dl{border:0;border-radius:12px;font-weight:800;padding:10px 16px;background:linear-gradient(135deg,#1dd1a1,#10ac84);color:#fff;box-shadow:0 6px 16px rgba(16,172,132,.24)}
+  .btn-dl:hover{transform:translateY(-1px)}
+
+  /* ---- Ad Cards ---- */
+  .pr-ad{border-radius:16px;background:linear-gradient(135deg,#fff7fe,#e8f3ff);box-shadow:0 4px 14px rgba(127,97,255,.12);display:flex;align-items:center;justify-content:center;min-height:220px;border:1px dashed #bfa7ff66;padding:10px}
+  .ad-300x250{width:100%;max-width:300px;min-height:250px;display:flex;align-items:center;justify-content:center;margin:10px auto}
+  .ad-120x600{width:120px;min-height:600px;display:flex;align-items:center;justify-content:center;margin:10px auto}
+
+  /* ---- Highlights tray ---- */
+  .hl-tray{display:flex;gap:10px;overflow:auto;padding:10px 4px;margin-top:8px}
+  .hl-pill{border:0;background:#fff;border-radius:18px;padding:10px 8px;display:flex;flex-direction:column;align-items:center;row-gap:6px;box-shadow:0 2px 10px rgba(0,0,0,.08);cursor:pointer;width:110px}
+  .hl-ava{width:64px;height:64px;border-radius:50%;overflow:hidden;flex:0 0 auto;border:3px solid #e4dfff;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+  .hl-ava img{width:100%;height:100%;object-fit:cover}
+  .hl-title{font-weight:800;font-size:.9rem;text-align:center;max-width:92px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hl-pill.active{background:linear-gradient(135deg,#6f47ff,#59c7f9);color:#fff}
+
+  /* ---- MODAL ---- */
+  #pr-modal{display:none;position:fixed;inset:0;z-index:1040;background:rgba(18,19,30,.92);align-items:center;justify-content:center}
+  #pr-modal.open{display:flex}
+  #pr-modal .overlay{position:absolute;inset:0}
+  .prm-wrap{--ctrl-h:58px;position:relative;display:flex;background:#fff;border-radius:18px;box-shadow:0 10px 50px rgba(32,16,90,.45);max-width:1100px;width:97vw;max-height:90vh;overflow:hidden}
+  .prm-left{flex:1.6;background:#0b0b12;display:flex;align-items:center;justify-content:center;padding-bottom:var(--ctrl-h)}
+  .prm-right{flex:1;background:#f8f7ff;display:flex;align-items:center;justify-content:center;padding:10px}
+  .prm-media{max-width:96%;max-height:calc(80vh - var(--ctrl-h));object-fit:contain;background:#000;border-radius:12px}
+  .prm-media.photo{background:#eef7fb}
+  .prm-close{position:absolute;top:10px;right:14px;font-size:2rem;background:none;border:0;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.6);z-index:2;cursor:pointer}
+  .prm-nav{position:absolute;top:50%;transform:translateY(-50%);border:0;width:46px;height:46px;border-radius:50%;background:#fff;color:#7a67ff;box-shadow:0 2px 12px rgba(66,52,140,.35);cursor:pointer;z-index:2}
+  .prm-prev{left:10px}.prm-next{right:10px}
+  .prm-controls{position:absolute;left:0;right:0;bottom:0;height:var(--ctrl-h);background:linear-gradient(90deg,#ecf0fd 60%,#f6e0f8 100%);border-top:1px solid #e2dbfc;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;z-index:2}
+  .prm-controls .btn-dl{padding:9px 14px}
+  .prm-ad-desktop,.prm-ad-mobile{width:100%}
+  .prm-ad-desktop{display:none}.prm-ad-mobile{display:block}
+  @media (min-width:992px){.prm-ad-desktop{display:block}.prm-ad-mobile{display:none}}
+  @media (max-width:720px){.prm-wrap{flex-direction:column;--ctrl-h:66px}.prm-left,.prm-right{min-height:110px}}
+</style>
+
+{% set p = profile or {} %}
+{% set sections = sections or {'posts':[], 'stories':[], 'highlights':[], 'reels':[]} %}
+
+<!-- HERO -->
+<section class="pr-hero">
+  <div class="pr-hero-inner">
+    <button class="pr-avatar p-0" style="background:none;border:0" onclick="openAvatar()">
+      <img src="{{ sign_img_proxy(p.avatar) if p.avatar else 'https://i.imgur.com/1H1Z1Qp.png' }}" alt="avatar" referrerpolicy="no-referrer">
+    </button>
+    <div class="pr-meta">
+      <div class="pr-username">@{{ p.username or 'username' }}</div>
+      <div class="pr-stats">
+        <div class="pr-stat">{{ p.posts_count or 0 }} <small>{{ _('posts') }}</small></div>
+        <div class="pr-stat">{{ p.followers or 0 }} <small>{{ _('followers') }}</small></div>
+        <div class="pr-stat">{{ p.following or 0 }} <small>{{ _('following') }}</small></div>
+      </div>
+      {% if p.full_name or p.bio %}
+      <div class="pr-bio"><strong>{{ p.full_name or '' }}</strong>{% if p.full_name and p.bio %} — {% endif %}{{ p.bio or '' }}</div>
+      {% endif %}
+    </div>
+    <div class="pr-cta">
+      <a class="btn btn-sm btn-light btn-new" href="{% if get_locale() == 'en' %}{{ url_for('index', lang='en')|replace('/en','') }}{% else %}{{ url_for('index', lang=get_locale()) }}{% endif %}">
+        <i class="bi bi-plus-circle me-1"></i>{{ _('New Download') }}
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- TABS -->
+<div class="pr-tabs">
+  <ul class="nav nav-pills nav-pr" id="prTab" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="tab-posts" data-label="{{ _('POSTS') }}" data-bs-toggle="tab" data-bs-target="#pane-posts" type="button" role="tab">{{ _('POSTS') }}</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="tab-stories" data-label="{{ _('STORIES') }}" data-bs-toggle="tab" data-bs-target="#pane-stories" type="button" role="tab">{{ _('STORIES') }}</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="tab-highlights" data-label="{{ _('HIGHLIGHTS') }}" data-bs-toggle="tab" data-bs-target="#pane-highlights" type="button" role="tab">{{ _('HIGHLIGHTS') }}</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="tab-reels" data-label="{{ _('REELS') }}" data-bs-toggle="tab" data-bs-target="#pane-reels" type="button" role="tab">{{ _('REELS') }}</button>
+    </li>
+  </ul>
+</div>
+
+<!-- TOP AD -->
+<div class="mt-2 mb-2">
+  {{ render_ad("profile_top") }}
+</div>
+
+<!-- AD TEMPLATES -->
+<template id="tpl-ad-posts"><div class="pr-ad"><div class="ad-300x250">{{ render_ad("profile_posts_300x250") }}</div></div></template>
+<template id="tpl-ad-highlights"><div class="pr-ad"><div class="ad-300x250">{{ render_ad("profile_highlights_300x250") }}</div></div></template>
+<template id="tpl-ad-stories"><div class="pr-ad"><div class="ad-120x600">{{ render_ad("profile_stories_120x600") }}</div></div></template>
+<template id="tpl-ad-reels"><div class="pr-ad"><div class="ad-120x600">{{ render_ad("profile_reels_120x600") }}</div></div></template>
+
+<div class="tab-content">
+  <!-- POSTS -->
+  <div class="tab-pane fade show active" id="pane-posts" role="tabpanel" aria-labelledby="tab-posts">
+    <div id="loader-posts" class="text-center my-3" style="display:none"><div class="spinner-border text-primary" role="status"></div></div>
+    <div id="grid-posts" class="pr-grid"></div>
+  </div>
+
+  <!-- STORIES -->
+  <div class="tab-pane fade" id="pane-stories" role="tabpanel" aria-labelledby="tab-stories">
+    <div id="loader-stories" class="text-center my-3" style="display:none"><div class="spinner-border text-primary" role="status"></div></div>
+    <div id="grid-stories" class="pr-grid"></div>
+  </div>
+
+  <!-- HIGHLIGHTS -->
+  <div class="tab-pane fade" id="pane-highlights" role="tabpanel" aria-labelledby="tab-highlights">
+    <div class="hl-tray" id="hl-tray"></div>
+    <div id="loader-highlights" class="text-center my-3" style="display:none"><div class="spinner-border text-primary" role="status"></div></div>
+    <div id="grid-highlights" class="pr-grid"></div>
+  </div>
+
+  <!-- REELS -->
+  <div class="tab-pane fade" id="pane-reels" role="tabpanel" aria-labelledby="tab-reels">
+    <div id="loader-reels" class="text-center my-3" style="display:none"><div class="spinner-border text-primary" role="status"></div></div>
+    <div id="grid-reels" class="pr-grid"></div>
+  </div>
+</div>
+
+<!-- GLOBAL MODAL -->
+<div id="pr-modal" role="dialog" aria-modal="true">
+  <div class="overlay" onclick="closePrModal"></div>
+  <div class="prm-wrap">
+    <div class="prm-left"><div id="prm-preview"></div></div>
+    <div class="prm-right">
+      <div class="prm-ad-desktop">
+        <div id="ad-modal-posts-d"      style="display:none">{{ render_ad("profile_modal_posts_desktop") }}</div>
+        <div id="ad-modal-stories-d"    style="display:none">{{ render_ad("profile_modal_stories_desktop") }}</div>
+        <div id="ad-modal-highlights-d" style="display:none">{{ render_ad("profile_modal_highlights_desktop") }}</div>
+        <div id="ad-modal-reels-d"      style="display:none">{{ render_ad("profile_modal_reels_desktop") }}</div>
+      </div>
+      <div class="prm-ad-mobile">
+        <div id="ad-modal-posts-m"      style="display:none">{{ render_ad("profile_modal_posts_mobile") }}</div>
+        <div id="ad-modal-stories-m"    style="display:none">{{ render_ad("profile_modal_stories_mobile") }}</div>
+        <div id="ad-modal-highlights-m" style="display:none">{{ render_ad("profile_modal_highlights_mobile") }}</div>
+        <div id="ad-modal-reels-m"      style="display:none">{{ render_ad("profile_modal_reels_mobile") }}</div>
+      </div>
+    </div>
+    <button class="prm-close" onclick="closePrModal()" aria-label="Close">&times;</button>
+    <button class="prm-nav prm-prev" onclick="navPrev()" title="Prev">&#8678;</button>
+    <button class="prm-nav prm-next" onclick="navNext()" title="Next">&#8680;</button>
+    <div class="prm-controls">
+      <div id="prm-type" class="fw-bold text-dark"></div>
+      <div id="prm-dl"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===================== Templated data ===================== */
+const USERNAME = (() => {
+  const fromTpl = {{ (profile.username or '')|tojson }};
+  if (fromTpl) return fromTpl;
+  const m = location.pathname.match(/\/u\/([^\/?#]+)/) || location.pathname.match(/\/profile\/([^\/?#]+)/) || location.pathname.match(/^\/([A-Za-z0-9._]+)\/?$/);
+  return m ? decodeURIComponent(m[1]) : '';
+})();
+const AVATAR_RAW = {{ (profile.avatar or '')|tojson }};
+const SECTIONS   = {{ (sections or {}) | tojson }};
+
+/* ===================== API endpoints ===================== */
+const API_FEED     = (q='') => `/api/u/${encodeURIComponent(USERNAME)}/feed${q}`;
+const API_REELS    = (q='') => `/api/u/${encodeURIComponent(USERNAME)}/reels${q}`;
+const API_HL_TRAY  =          `/api/u/${encodeURIComponent(USERNAME)}/hl_tray`;
+const API_HL_ITEMS = (hid) => `/api/u/${encodeURIComponent(USERNAME)}/hl/${encodeURIComponent(hid)}`;
+
+/* ===================== UI strings ===================== */
+const FALLBACK_SVG = 'data:image/svg+xml;utf8,'+encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160">
+     <defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#e8e5ff"/><stop offset="1" stop-color="#eaf7ff"/></linearGradient></defs>
+     <rect width="160" height="160" fill="url(#g)"/>
+     <g fill="#9aa0b3" opacity=".75">
+       <rect x="45" y="48" width="70" height="50" rx="6"/>
+       <circle cx="68" cy="65" r="10"/>
+       <rect x="75" y="70" width="28" height="12" rx="6"/>
+     </g>
+   </svg>`
+);
+const t_loading_more = {{ _('Loading more…')|tojson }};
+const t_all_done     = {{ _('That’s all.')|tojson }};
+const t_retry_scroll = {{ _('An error occurred. Scroll again to retry.')|tojson }};
+const t_video        = {{ _('Video')|tojson }};
+const t_photo        = {{ _('Photo')|tojson }};
+const t_download     = {{ _('Download')|tojson }} ;
+
+/* ===================== Helpers ===================== */
+const kfmt = (n)=>{ n=parseInt(n||0,10); if(n>=1_000_000) return (Math.round(n/100000)/10)+'M'; if(n>=1_000) return (Math.round(n/100)/10)+'K'; return (isNaN(n)?'0':String(n)); };
+const stripQuery=(u)=>{ try{ return (u||'').split('?')[0]; }catch(_){ return u||''; } };
+const isVideo = (it)=> (it?.type==='video');
+const pickThumb = (it)=> it ? (it.type==='image' ? (it.url || it.download_url || it.thumb || '') : (it.thumb || it.url || it.download_url || '')) : '';
+const pickPhoto = (it)=> it?.url || it?.download_url || it?.thumb || '';
+const rand57 = ()=> 5 + Math.floor(Math.random()*3);
+
+/* ===================== Signing proxy ===================== */
+const _signCache = new Map();
+async function sign(kind, url, fn='instavido'){
+  if (!url) return url;
+  const key = kind+':'+url+'#'+fn;
+  if (_signCache.has(key)) return _signCache.get(key);
+  try{
+    const r = await fetch('/api/sign',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind,url,fn})});
+    const j = await r.json();
+    if (j && j.ok && j.url){ _signCache.set(key, j.url); return j.url; }
+  }catch(_){}
+  return url;
+}
+const signImg   = (u)=> sign('img', u);
+const signMedia = (u,fn)=> sign('media', u, fn);
+
+/* ===================== Ads helpers ===================== */
+function adHTMLFor(listKey){
+  const map = { posts:'tpl-ad-posts', highlights:'tpl-ad-highlights', stories:'tpl-ad-stories', reels:'tpl-ad-reels' };
+  const t = document.getElementById(map[listKey]);
+  return t ? t.innerHTML : '';
+}
+function injectHTML(targetEl, html){
+  const tmp = document.createElement('div'); tmp.innerHTML = html;
+  tmp.querySelectorAll('script').forEach(old=>{
+    const s = document.createElement('script');
+    for (const a of old.attributes) s.setAttribute(a.name, a.value);
+    s.text = old.text || old.textContent || '';
+    old.replaceWith(s);
+  });
+  targetEl.append(...tmp.childNodes);
+}
+
+/* ===================== State ===================== */
+const state = {
+  posts     : { items:[], next:null, loading:false, done:false,  seen:new Set(), ads:{count:0,next:rand57()} },
+  reels     : { items:[], next:null, loading:false, done:false,  seen:new Set(), ads:{count:0,next:rand57()} },
+  stories   : { items:[], next:null, loading:false, done:true,   seen:new Set(), ads:{count:0,next:rand57()} },
+  highlights: { items:[], next:null, loading:false, done:true,   seen:new Set(), ads:{count:0,next:rand57()} },
+  hl        : { trayLoaded:false, current:null, items:[] },
+  avatar    : [],
+  io : null
+};
+const gridEl = (k)=> document.getElementById(`grid-${k}`);
+const showLoader=(k)=>{ const el=document.getElementById(`loader-${k}`); if(el) el.style.display='block'; };
+const hideLoader=(k)=>{ const el=document.getElementById(`loader-${k}`); if(el) el.style.display='none'; };
+
+/* Sayaçları tamamen kapat (tab metnini olduğu gibi bırak) */
+function setTabCount(k,_n){
+  const btn = document.getElementById(`tab-${k}`);
+  if (!btn) return;
+  const base = btn.dataset.label || btn.textContent.trim();
+  btn.textContent = base;
+}
+
+/* ===================== Sentinel / Infinite ===================== */
+function ensureSentinel(k){
+  if (!['posts','reels'].includes(k)) return null;
+  const g=gridEl(k); if(!g) return null;
+  let s=g.querySelector('.load-more');
+  if(!s){
+    s=document.createElement('div'); s.className='load-more'; s.dataset.listkey=k;
+    s.innerHTML=`<div class="d-flex align-items-center justify-content-center gap-2 p-3" style="grid-column:1 / -1;color:#6b59fd;font-weight:800;">
+      <span class="spinner-border spinner-border-sm" role="status"></span>
+      <span class="lm-text">${t_loading_more}</span>
+    </div>`;
+    g.appendChild(s);
+  }
+  g.appendChild(s); // her çağrıda en alta taşı
+  if (state.io) try{ state.io.observe(s); }catch(_){}
+  return s;
+}
+function setSentinelText(k,txt,spin=true){
+  const s=ensureSentinel(k); if(!s) return;
+  const t=s.querySelector('.lm-text'); if(t) t.textContent=txt||'';
+  const sp=s.querySelector('.spinner-border'); if(sp) sp.style.display=spin?'':'none';
+  s.style.display='';
+}
+function hideSentinel(k){ const s=gridEl(k)?.querySelector('.load-more'); if(s) s.style.display='none'; }
+
+/* ===================== Cards ===================== */
+function kindIcon(it){ return isVideo(it) ? '<i class="bi bi-camera-video-fill"></i>' : '<i class="bi bi-image-fill"></i>'; }
+function stableKey(it, idx){ if (it && it.id != null) return String(it.id); return stripQuery(it?.download_url || it?.url || it?.thumb || ('idx:' + idx)); }
+function cardHTML(it, listKey, idx, square=false){
+  const video  = isVideo(it);
+  const frame  = video ? 'frame-video' : 'frame-photo';
+  const cls    = square ? 'square' : 'nine16';
+  const raw    = pickThumb(it);
+  const key    = stableKey(it, idx);
+  const dlName = (USERNAME||'insta') + '_' + (it?.id ?? idx) + (video?'.mp4':'.jpg');
+  return `
+  <div class="pr-card" data-key="${key}">
+    <div class="thumb-wrap">
+      <div class="badges">
+        ${it.like_count!=null?`<div class="badge-chip"><i class="bi bi-heart-fill"></i> ${kfmt(it.like_count)}</div>`:''}
+        ${it.comment_count!=null?`<div class="badge-chip"><i class="bi bi-chat-dots-fill"></i> ${kfmt(it.comment_count)}</div>`:''}
+        ${(video&&it.view_count!=null)?`<div class="badge-chip"><i class="bi bi-eye-fill"></i> ${kfmt(it.view_count)}</div>`:''}
+      </div>
+      <button class="zoom-btn" onclick="openModalKey('${listKey}', '${encodeURIComponent(key)}')" aria-label="Preview"><i class="bi bi-arrows-fullscreen"></i></button>
+      <div class="${cls} ${frame}" onclick="openModalKey('${listKey}', '${encodeURIComponent(key)}')">
+        <img data-rawsrc="${raw || ''}" src="${FALLBACK_SVG}" referrerpolicy="no-referrer" loading="lazy" decoding="async"
+             onerror="this.onerror=null;this.src='${FALLBACK_SVG}'" alt="">
+      </div>
+    </div>
+    <div class="d-flex justify-content-center align-items-center gap-2 py-1" style="font-weight:800;color:#6b59fd;">
+      ${kindIcon(it)} <span style="font-size:.9rem;">${isVideo(it) ? t_video : t_photo}</span>
+    </div>
+    <div class="pr-actions">
+      <a class="btn-dl" data-dl-raw="${it?.download_url || it?.url || it?.thumb || '#'}" data-dl-name="${dlName}">
+        <i class="bi bi-download me-1"></i>${t_download}
+      </a>
+    </div>
+  </div>`;
+}
+async function hydrateCards(container){
+  const imgs = container.querySelectorAll('img[data-rawsrc]');
+  const promises=[];
+  imgs.forEach(img=>{
+    const raw = img.getAttribute('data-rawsrc')||'';
+    if(!raw) return;
+    promises.push(signImg(raw).then(u=>{ img.src=u||raw; }));
+  });
+  const dls = container.querySelectorAll('a.btn-dl[data-dl-raw]');
+  dls.forEach(a=>{
+    const raw = a.getAttribute('data-dl-raw')||'#';
+    const name= a.getAttribute('data-dl-name')||'file';
+    a.addEventListener('click', async (ev)=>{
+      ev.preventDefault();
+      const u = await signMedia(raw, name.replace(/[^a-zA-Z0-9_.-]/g,'') || 'instavido');
+      location.href = u;
+    }, {once:true});
+  });
+  await Promise.allSettled(promises);
+}
+function appendItems(listKey, arr, square=false){
+  const g=gridEl(listKey); if(!g) return;
+  const st=state[listKey]; const before=st.items.length; let html='';
+  for(const it of arr){
+    const key=stableKey(it, before + st.items.length);
+    if (st.seen.has(key)) continue;
+    st.seen.add(key); st.items.push(it);
+    html += cardHTML(it, listKey, before + st.items.length - 1, square);
+    st.ads.count++;
+    if (st.ads.count >= st.ads.next){
+      if (html){ g.insertAdjacentHTML('beforeend', html); hydrateCards(g); html=''; }
+      const adHtml = adHTMLFor(listKey); if (adHtml){ injectHTML(g, adHtml); }
+      st.ads.next = st.ads.count + rand57();
+    }
+  }
+  if (html){ g.insertAdjacentHTML('beforeend', html); hydrateCards(g); }
+  if (['posts','reels'].includes(listKey)) ensureSentinel(listKey);
+}
+
+/* ===================== Fetchers (no date filters) ===================== */
+async function jget(url){ const r = await fetch(url,{cache:'no-store'}); try{ return await r.json(); }catch(_){ return {}; } }
+
+async function fetchPosts(force=false){
+  const st=state.posts; if (!USERNAME) return;
+  if (!force && (st.loading || st.done)) return;
+  st.loading = true; setSentinelText('posts', t_loading_more, true);
+  try{
+    const tail = st.next ? `?max_id=${encodeURIComponent(st.next)}&count=18&_ts=${Date.now()}` : `?count=18&_ts=${Date.now()}`;
+    const j  = await jget(API_FEED(tail));
+    const items = j.items || [];
+    if (items.length) appendItems('posts', items, true);
+    const prev = st.next; st.next = j.next_max_id || null;
+    if (!st.next || st.next===prev || items.length===0){ st.done = true; setSentinelText('posts', t_all_done, false); }
+  }catch(_){ setSentinelText('posts', t_retry_scroll, false); }
+  finally{ st.loading = false; }
+}
+
+async function fetchReels(force=false){
+  const st=state.reels; if (!USERNAME) return;
+  if (!force && (st.loading || st.done)) return;
+  st.loading = true; setSentinelText('reels', t_loading_more, true);
+  try{
+    const tail = st.next ? `?max_id=${encodeURIComponent(st.next)}&page_size=50&_ts=${Date.now()}` : `?page_size=50&_ts=${Date.now()}`;
+    const j  = await jget(API_REELS(tail));
+    const items = j.items || [];
+    if (items.length) appendItems('reels', items, false);
+    const prev = st.next; st.next = j.next_max_id || null;
+    if (!st.next || st.next===prev || items.length===0){ st.done = true; setSentinelText('reels', t_all_done, false); }
+  }catch(_){ setSentinelText('reels', t_retry_scroll, false); }
+  finally{ st.loading = false; }
+}
+
+/* ===================== Stories / Highlights ===================== */
+function loadStoriesInitial(){
+  const arr = (SECTIONS.stories || []);
+  if (!arr.length) return;
+  state.stories.done = true;
+  appendItems('stories', arr, false);
+  setTabCount('stories', arr.length); // sayaç yok; metni base'e çeker
+}
+async function loadHlTray(){
+  if (state.hl.trayLoaded) return;
+  state.hl.trayLoaded = true;
+  const tray = document.getElementById('hl-tray'); tray.innerHTML='';
+  const j = await jget(API_HL_TRAY); const arr = j.items || [];
+  setTabCount('highlights', arr.length || 0); // no-op (metin sabit)
+  if (!arr.length) return;
+
+  arr.forEach((h,idx)=>{
+    const raw = String(h.id ?? h.reel_id ?? '');
+    const hid = raw.startsWith('highlight:') ? raw : ('highlight:' + raw);
+
+    const pill = document.createElement('button'); pill.type='button'; pill.className='hl-pill'; pill.dataset.hid=hid;
+    const ava = document.createElement('div'); ava.className='hl-ava';
+    ava.innerHTML = `<img data-rawsrc="${h.cover||FALLBACK_SVG}" src="${FALLBACK_SVG}" referrerpolicy="no-referrer"
+                      onerror="this.src='${FALLBACK_SVG}'" style="width:100%;height:100%;object-fit:cover">`;
+    const title = document.createElement('div'); title.className='hl-title'; title.textContent = h.title || '—';
+
+    pill.appendChild(ava); pill.appendChild(title);
+    pill.addEventListener('click', (ev)=>{ ev.preventDefault(); selectHl(hid, pill); });
+    tray.appendChild(pill);
+
+    const img = ava.querySelector('img[data-rawsrc]'); if (img){ signImg(img.getAttribute('data-rawsrc')).then(u=>{ img.src=u; }); }
+    if (idx===0) setTimeout(()=>pill.click(), 0);
+  });
+}
+async function selectHl(hid, pillEl){
+  document.querySelectorAll('.hl-pill').forEach(p=>p.classList.remove('active'));
+  if (pillEl) pillEl.classList.add('active');
+  const grid = gridEl('highlights'); grid.innerHTML=''; showLoader('highlights');
+  try{
+    const j = await jget(API_HL_ITEMS(hid));
+    const items = j.items || [];
+    state.hl.current = hid;
+    state.hl.items   = items.slice();
+    state.highlights.items = []; state.highlights.seen = new Set(); // preseed etme
+    appendItems('highlights', items, true);
+  } finally { hideLoader('highlights'); }
+}
+
+/* ===================== Modal & Avatar ===================== */
+function openAvatar(){
+  if (!AVATAR_RAW) return;
+  state.avatar = [{type:'image', url:AVATAR_RAW, download_url:AVATAR_RAW, id:'avatar'}];
+  openModalKey('avatar', encodeURIComponent('avatar'));
+}
+let curListKey='posts', curIndex=0;
+function arrForKey(k){
+  if (k==='highlights') return state.hl.items;
+  if (k==='stories')    return state.stories.items;
+  if (k==='avatar')     return state.avatar;
+  return state[k].items;
+}
+window.openModalKey = function(k, encKey){
+  const key = decodeURIComponent(encKey||'');
+  const arr = arrForKey(k);
+  const idx = Math.max(0, arr.findIndex((it,i)=> stableKey(it,i)===key));
+  curListKey=k; curIndex=idx; renderModal();
+  ['posts','stories','highlights','reels'].forEach(key2=>{
+    const d = document.getElementById(`ad-modal-${key2}-d`);
+    const m = document.getElementById(`ad-modal-${key2}-m`);
+    if (d) d.style.display = (key2===k) ? '' : 'none';
+    if (m) m.style.display = (key2===k) ? '' : 'none';
+  });
+  const mEl=document.getElementById('pr-modal'); mEl.classList.add('open'); mEl.style.display='flex';
+};
+window.closePrModal = function(){
+  const m=document.getElementById('pr-modal'); m.classList.remove('open'); m.style.display='none';
+  document.querySelectorAll('#pr-modal video').forEach(v=>{ try{ v.pause(); v.removeAttribute('src'); v.load(); }catch(_){ } });
+  document.getElementById('prm-preview').innerHTML='';
+};
+window.navPrev = function(){ if (curIndex>0){ curIndex--; swapModal(); } };
+window.navNext = function(){ const arr = arrForKey(curListKey); if (curIndex < arr.length-1){ curIndex++; swapModal(); } };
+function renderModal(){
+  const prev=document.getElementsByClassName('prm-prev')[0];
+  const next=document.getElementsByClassName('prm-next')[0];
+  const arr = arrForKey(curListKey);
+  prev.style.display = (curIndex>0) ? 'inline-flex' : 'none';
+  next.style.display = (curIndex<arr.length-1) ? 'inline-flex' : 'none';
+  swapModal();
+}
+async function swapModal(){
+  const arr = arrForKey(curListKey);
+  const it  = arr[curIndex] || {};
+  document.querySelectorAll('#pr-modal video').forEach(v=>{ try{ v.pause(); v.removeAttribute('src'); v.load(); }catch(_){ } });
+
+  let html='';
+  if (isVideo(it)){
+    const vsrc = it.url || it.download_url || '';
+    html = `<video class="prm-media" src="${vsrc}" controls autoplay playsinline></video>`;
+    document.getElementById('prm-type').textContent = `🎬 ${t_video}`;
+  } else {
+    const raw = pickPhoto(it);
+    const signed = await signImg(raw);
+    html = signed ? `<img class="prm-media photo" src="${signed}" alt="preview" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${FALLBACK_SVG}'">`
+                  : `<div class="text-center p-4">Image not available</div>`;
+    document.getElementById('prm-type').textContent = `🖼 ${t_photo}`;
+  }
+  document.getElementById('prm-preview').innerHTML = html;
+
+  const baseName = (curListKey==='avatar') ? `${USERNAME||'insta'}_avatar` : (USERNAME||'insta') + '_' + (it?.id ?? curIndex);
+  const dlName = baseName + (isVideo(it)?'.mp4':'.jpg');
+  const rawDL  = it?.download_url || it?.url || it?.thumb || '#';
+  document.getElementById('prm-dl').innerHTML = `<a class="btn-dl" id="prm-dl-a"><i class="bi bi-download me-1"></i>${t_download}</a>`;
+  const a = document.getElementById('prm-dl-a');
+  a.addEventListener('click', async (ev)=>{ ev.preventDefault(); const u = await signMedia(rawDL, dlName.replace(/[^a-zA-Z0-9_.-]/g,'')); location.href = u; }, {once:true});
+}
+window.addEventListener('keydown', e=>{ if(e.key==='Escape') closePrModal(); });
+
+/* ===================== IO & boot ===================== */
+function setupIO(){
+  if (state.io) return;
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if (!e.isIntersecting) return;
+      const k = e.target.dataset.listkey;
+      if (k==='posts') fetchPosts();
+      if (k==='reels') fetchReels();
+    });
+  }, { root:null, rootMargin:'1200px 0px 600px 0px', threshold:0 });
+  state.io = io;
+  ['posts','reels'].forEach(k=>{ const s = ensureSentinel(k); if (s) io.observe(s); });
+}
+function nearBottom(){ const y = window.scrollY || document.documentElement.scrollTop; const h = document.documentElement.scrollHeight - document.documentElement.clientHeight; return (h - y) < 1400; }
+let ticking=false;
+window.addEventListener('scroll', ()=>{ if (ticking) return; ticking=true; setTimeout(()=>{ ticking=false; if (!nearBottom()) return; if (!state.posts.done) fetchPosts(); if (!state.reels.done) fetchReels(); }, 200); });
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  if (!USERNAME){ console.error('USERNAME boş'); return; }
+
+  // Sekme başlıklarını temiz baz metne çek
+  setTabCount('posts', null);
+  setTabCount('stories', null);
+  setTabCount('highlights', null);
+  setTabCount('reels', null);
+
+  // varsa statik sections
+  if ((SECTIONS.posts||[]).length){ appendItems('posts', SECTIONS.posts, true); }
+  if ((SECTIONS.stories||[]).length){ loadStoriesInitial(); }
+
+  ensureSentinel('posts'); ensureSentinel('reels'); setupIO();
+
+  fetchPosts(true);
+  setTimeout(()=>{ if(!state.reels.items.length) fetchReels(true); }, 400);
+
+  document.getElementById('tab-highlights').addEventListener('shown.bs.tab', loadHlTray);
+  document.getElementById('tab-reels').addEventListener('shown.bs.tab', ()=>{ if(!state.reels.items.length && !state.reels.loading) fetchReels(); });
+  document.getElementById('tab-posts').addEventListener('shown.bs.tab', ()=>{ if(!state.posts.items.length && !state.posts.loading) fetchPosts(); });
+});
+</script>
+{% endblock %}

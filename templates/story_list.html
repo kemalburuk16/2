@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+{% block title %}{{ username }} - {{ _('Stories') }} · InstaVido{% endblock %}
+
+{% block header %}{% endblock %}
+
+{% block content %}
+{% from "ads/macros.html" import render_ad %}
+
+<style>
+  /* Üst bar */
+  .stories-topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:12px; margin:12px 0 18px 0;
+  }
+  .stories-username{
+    display:inline-flex; align-items:center; gap:10px;
+    padding:10px 14px; border-radius:18px;
+    background:linear-gradient(135deg,#ffe8f4,#fff);
+    color:#4a3f6b; font-weight:800; letter-spacing:.2px;
+    box-shadow:0 6px 18px rgba(255,110,170,.12);
+  }
+  .stories-username .handle{ color:#e24f8a; }
+  .btn-new-dl{
+    background: linear-gradient(135deg, #6f47ff, #ff4f88);
+    color:#fff; border:0; border-radius:999px; padding:10px 16px; font-weight:800;
+    box-shadow:0 8px 22px rgba(120,90,255,.28); white-space:nowrap;
+  }
+  .btn-new-dl:hover{ transform: translateY(-1px); }
+
+  /* GRID: daha iri kartlar, 2–3 sütun */
+  .story-grid{
+    display:grid; gap:16px;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  }
+  @media (max-width: 991.98px){
+    .story-grid{ grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:14px; }
+  }
+  @media (max-width: 599.98px){
+    .story-grid{ grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap:12px; }
+  }
+
+  .story-card{
+    position:relative; border-radius:16px; overflow:hidden; cursor:pointer;
+    padding:3px; /* dış animasyon çerçevesi için boşluk */
+  }
+
+  /* Animasyonlu video çerçevesi: pembe-kırmızı */
+  .story-card.video{
+    background: conic-gradient(from 0deg, #ff4f88, #ff7aa8, #ff4f88);
+    animation: spinVideo 8s linear infinite;
+  }
+  @keyframes spinVideo{ 0%{ filter:hue-rotate(0deg) } 100%{ filter:hue-rotate(360deg) } }
+
+  /* Animasyonlu foto çerçevesi: mavi-yeşil */
+  .story-card.photo{
+    background: conic-gradient(from 0deg, #1dd1a1, #36d1dc, #1dd1a1);
+    animation: spinPhoto 10s linear infinite;
+  }
+  @keyframes spinPhoto{ 0%{ filter:hue-rotate(0deg) } 100%{ filter:hue-rotate(360deg) } }
+
+  /* 9:16 sahne (büyük) */
+  .story-frame{
+    border-radius:13px; overflow:hidden; background:#0b0b12;
+    aspect-ratio: 9 / 16; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 8px 24px rgba(33,16,88,.18);
+  }
+  .story-thumb{
+    width:96%; height:96%; /* kenarlardan güvenli boşluk */
+    object-fit:cover; display:block; border-radius:10px;
+    transition: transform .16s ease, filter .16s ease;
+  }
+  .story-card:hover .story-thumb{ transform: scale(1.02); filter:saturate(1.06); }
+
+  /* Grid içi reklam kartları — 9:16 görünümde ama içte uygun slotlar */
+  .story-ad{
+    padding:3px; border-radius:16px; background:linear-gradient(135deg,#fff7fe,#e8f3ff);
+    box-shadow:0 6px 22px rgba(127,97,255,.12);
+  }
+  .story-ad .story-frame{
+    background:linear-gradient(135deg,#ffffff,#f7fbff);
+    border:1px dashed #bfa7ff66;
+    display:flex; align-items:center; justify-content:center;
+  }
+  /* Masaüstü: 120x600 göstermek için dikey kutu */
+  .ad-desktop{ display:none; }
+  .ad-mobile{ display:block; }
+  @media (min-width: 992px){
+    .ad-desktop{ display:flex; width:120px; height:600px; align-items:center; justify-content:center; }
+    .ad-mobile{ display:none; }
+  }
+  /* Mobil/Tablet: 300x250 ya da 50x300 */
+  .ad-mobile .box-300-250{ width:300px; max-width:92%; height:250px; }
+  .ad-mobile .box-50-300{ width:50px; height:300px; }
+
+  /* ========== MODAL ========== */
+  #story-modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100vw; height: 100vh; background: rgba(34,33,44,.90); align-items: center; justify-content: center; transition: all .2s; }
+  #story-modal.open { display: flex; }
+
+  /* Kontrol şeridi yüksekliği; left panele pay + safe-area (mobil) */
+  .story-modal-content {
+    --ctrl-h: 56px;
+    display: flex; background: #fff; border-radius: 18px; box-shadow: 0 10px 50px rgba(32,16,90,.45);
+    max-width: 980px; width: 97vw; max-height: 88vh; overflow: hidden; position: relative;
+    animation: popin .28s cubic-bezier(.52,1.4,.4,1);
+  }
+  @keyframes popin { 0%{ transform:scale(.92); opacity:.4 } 100%{ transform:scale(1); opacity:1 } }
+
+  .story-modal-left {
+    flex:1.6; background:#0b0b12; display:flex; align-items:center; justify-content:center;
+    padding-bottom: calc(var(--ctrl-h) + env(safe-area-inset-bottom, 0px));
+  }
+  .story-modal-right { flex:1; background:#f8f7ff; display:flex; align-items:center; justify-content:center; min-width:200px; }
+
+  /* Önizleme container — taşmayı kesin kes engeller */
+  .story-preview-box{
+    width: clamp(260px, 48vw, 640px);
+    max-height: calc(88vh - var(--ctrl-h) - env(safe-area-inset-bottom, 0px) - 24px);
+    aspect-ratio: 9 / 16;
+    display:flex; align-items:center; justify-content:center;
+    border-radius:12px; overflow:hidden; background:#000; position:relative;
+    padding: 6px; /* iç boşluk: medya kenarlara değmesin */
+  }
+  .story-modal-preview{
+    width:100%; height:100%; display:block; object-fit:contain;
+    max-width: 100%; max-height: 100%;
+    transform: scale(.985); /* çok az küçült, kenarlara asla taşma */
+    border-radius:8px; background:#000;
+  }
+  .story-modal-preview.photo{ background:#eef7fb; }
+
+  .story-modal-controls {
+    width:100%; display:flex; justify-content: space-between; align-items:center;
+    padding: 8px 12px; background: linear-gradient(90deg,#ecf0fd 60%,#f6e0f8 100%);
+    border-top:1px solid #e2dbfc; position: absolute; bottom:0; left:0; height: var(--ctrl-h); z-index:3;
+  }
+  .story-modal-controls button { border:none; background: #ae87f7; color:#fff; padding: 9px 14px; border-radius:10px; font-weight:800; cursor:pointer; transition:.13s; }
+  .story-modal-controls button:hover { background:#7e48d7; }
+  .story-modal-close { position: absolute; right: 16px; top: 12px; font-size: 2.0rem; color: #ffffff; background:none; border:none; cursor:pointer; z-index: 10; text-shadow:0 2px 10px rgba(0,0,0,.5); }
+  .story-modal-nav { position: absolute; top:50%; transform:translateY(-50%); background:#fff; border-radius:50%; border:none; font-size:2.1rem; cursor:pointer; width:46px; height:46px; color:#7a67ff; box-shadow:0 2px 12px rgba(66,52,140,.35); z-index: 7; }
+  .story-modal-prev { left: 10px;} .story-modal-next { right: 10px;}
+
+  @media (max-width: 720px) {
+    .story-modal-content { flex-direction: column; max-width:97vw; --ctrl-h: 64px; }
+    .story-modal-left, .story-modal-right { min-width: 110px; max-width:100vw; }
+    .story-preview-box{ width: clamp(240px, 74vw, 680px); }
+  }
+</style>
+
+<div class="stories-topbar">
+  <div class="stories-username">
+    <span class="handle">@{{ username }}</span>
+    <span>· {{ _('Active Stories') }}</span>
+  </div>
+  <a class="btn-new-dl" href="{% if get_locale() == 'en' %}{{ url_for('index', lang='en')|replace('/en', '') }}{% else %}{{ url_for('index', lang=get_locale()) }}{% endif %}">
+    {{ _('New Download') }}
+  </a>
+</div>
+
+{# ---- Grid: 2–3 iri kart + reklam kutuları ---- #}
+<div class="story-grid">
+  {% set insert_every = 3 %} {# her 3 öğede bir reklam #}
+  {% for s in stories %}
+    {% set is_video = (s.type == 'video' or s.media_type == 'video') %}
+    <div class="story-card {{ 'video' if is_video else 'photo' }}" data-index="{{ loop.index0 }}" onclick="showStoryModal({{ loop.index0 }})" title="{{ _('Preview') }}">
+      <div class="story-frame">
+        <img class="story-thumb" src="{{ url_for('img_pxy') }}?url={{ (s.thumb or s.poster or s.media_url or '')|urlencode }}" alt="story-thumbnail">
+      </div>
+    </div>
+
+    {% if (loop.index % insert_every) == 0 and not loop.last %}
+      <div class="story-ad">
+        <div class="story-frame">
+          <!-- Masaüstü 120x600 -->
+          <div class="ad-desktop">
+            {{ render_ad("story_grid_desktop") }}
+          </div>
+          <!-- Mobil/Tablet 300x250 veya 50x300 -->
+          <div class="ad-mobile">
+            <div class="box-300-250">
+              {{ render_ad("story_grid_mobile") }}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  {% endfor %}
+</div>
+
+<!-- MODAL -->
+<div id="story-modal">
+  <div class="overlay-click" onclick="closeStoryModal()" style="position:fixed; inset:0;"></div>
+
+  <div class="story-modal-content" style="position:relative; z-index:1;">
+    <div class="story-modal-left">
+      <div class="story-preview-box">
+        <div id="story-modal-preview" style="width:100%;height:100%;"></div>
+      </div>
+    </div>
+
+    <div class="story-modal-right" id="modal-ad-area">
+      <div style="width:100%;text-align:center;padding:12px;">
+        {{ render_ad("story_modal") }}
+      </div>
+    </div>
+
+    <button class="story-modal-close" onclick="closeStoryModal()" title="Close" aria-label="Close">&times;</button>
+
+    <button class="story-modal-nav story-modal-prev" onclick="prevStory()" title="Prev" style="display:none;">&#8678;</button>
+    <button class="story-modal-nav story-modal-next" onclick="nextStory()" title="Next" style="display:none;">&#8680;</button>
+
+    <div class="story-modal-controls" id="modal-controls">
+      <span id="modal-story-type" class="fw-bold text-dark"></span>
+      <a id="modal-dl-btn" href="#" download>
+        <button>{{ _('Download') }}</button>
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+  const stories = {{ stories|tojson }};
+  const IMG_PROXY = "{{ url_for('img_pxy') }}";
+  let currentStory = 0;
+
+  function proxied(u){ return IMG_PROXY + "?url=" + encodeURIComponent(u || ""); }
+
+  function pauseAllStoryVideos(hard=true){
+    document.querySelectorAll('#story-modal video').forEach(v=>{
+      try{
+        v.pause();
+        v.currentTime = 0;
+        if(hard){ v.removeAttribute('src'); v.load(); }
+      }catch(_){}
+    });
+  }
+
+  function showStoryModal(idx){
+    currentStory = idx;
+    updateStoryModal();
+    document.getElementById('story-modal').classList.add('open');
+  }
+  function closeStoryModal(){
+    pauseAllStoryVideos(true);
+    const cont = document.getElementById('story-modal-preview');
+    if (cont) cont.innerHTML = "";
+    document.getElementById('story-modal').classList.remove('open');
+  }
+
+  function updateStoryModal(){
+    document.querySelector('.story-modal-prev').style.display = currentStory > 0 ? '' : 'none';
+    document.querySelector('.story-modal-next').style.display = currentStory < (stories.length-1) ? '' : 'none';
+
+    const cur = stories[currentStory] || {};
+    const isVideo = (cur.type === "video");
+
+    document.getElementById('modal-story-type').innerHTML = isVideo ? "🎬 {{ _('Video') }}" : "🖼 {{ _('Photo') }}";
+    document.getElementById('modal-dl-btn').href = "{{ url_for('story_download', i=0) }}".replace("0", currentStory);
+
+    pauseAllStoryVideos(true);
+
+    let html = "";
+    if (isVideo){
+      html = `<video class="story-modal-preview" src="${cur.media_url}" controls autoplay playsinline></video>`;
+    }else{
+      html = `<img class="story-modal-preview photo" src="${proxied(cur.media_url)}" alt="story-image">`;
+    }
+    document.getElementById('story-modal-preview').innerHTML = html;
+  }
+  function prevStory(){ if(currentStory>0){ currentStory--; updateStoryModal(); } }
+  function nextStory(){ if(currentStory<stories.length-1){ currentStory++; updateStoryModal(); } }
+
+  // ESC + sekme görünürlüğü
+  window.addEventListener('keydown', e=>{ if (e.key === "Escape") closeStoryModal(); });
+  document.addEventListener('visibilitychange', ()=>{ if (document.hidden) pauseAllStoryVideos(true); });
+</script>
+{% endblock %}

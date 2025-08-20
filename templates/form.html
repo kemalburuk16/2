@@ -1,0 +1,168 @@
+{# templates/form.html #}
+<style>
+  /* Yalnızca bu forma etki etsin */
+  .iv-form { max-width: 800px; box-sizing: border-box; }
+
+  .iv-input-wrap{
+    width: min(92vw, 660px);
+    border-radius: 2.5rem;
+    overflow: hidden;
+    background: linear-gradient(135deg, #36d1dc, #a76df1);
+    transition: box-shadow 0.3s ease;
+    display: flex; align-items: stretch;
+    box-shadow: 0 8px 24px rgba(0,0,0,.08);
+  }
+
+  /* textarea: placeholder mobilde 2 satır, masaüstünde ortalı */
+  .iv-input{
+    flex: 1 1 auto;
+    border: 0;
+    background: #ffffffee; color: #333;
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.05);
+    transition: box-shadow 0.3s ease, height .2s ease, padding .2s ease, font-size .2s ease;
+    outline: none; resize: none;
+    border-radius: 2.5rem 0 0 2.5rem;
+    box-sizing: border-box;
+    font-weight: 500;
+  }
+  .iv-input::placeholder{ color:#6c757d; opacity:.95; }
+
+  .iv-input:focus{
+    box-shadow: 0 0 0 3px rgba(100,100,255,0.16), inset 0 0 8px rgba(0,0,0,0.05);
+  }
+
+  .iv-paste-btn{
+    border: 0; color: #fff; font-weight: 600;
+    background: rgba(255,255,255,0.10);
+    border-left: 1px solid #ffffff55;
+    transition: background .25s ease, opacity .2s ease;
+    white-space: nowrap;
+  }
+  .iv-paste-btn:hover{ background: rgba(255,255,255,0.22); }
+
+  /* Mobil optimizasyon: 2 satıra kadar sığsın, scroll olmasın */
+  @media (max-width: 575.98px){
+    .iv-input{
+      min-height: 56px;
+      line-height: 1.28;
+      font-size: 13.5px;
+      white-space: normal;
+      overflow: hidden;
+      padding: 10px 14px 10px 18px; /* rahat yazım + placeholder */
+    }
+    .iv-paste-btn{
+      padding: 0 12px;
+      font-size: 13px;
+    }
+  }
+
+  /* Masaüstü: placeholder dikeyde merkez, sığmazsa küçülür ve 2 satıra kırılır */
+  @media (min-width: 576px){
+    .iv-input{
+      height: 56px;                /* kapsayıcı yüksekliği */
+      line-height: 1.2;            /* metin yüksekliği */
+      font-size: clamp(14px, 1.2vw, 16px);  /* uzun dillerde küçülür */
+      white-space: normal;         /* gerekiyorsa satıra kır */
+      overflow: hidden;
+      text-overflow: clip;
+      padding-inline: 18px;        /* soldan/sağdan boşluk */
+      /* Yüksekliğin ortasında konforlu hizalama için blok padding */
+      padding-block: 14px;         /* (56px - ~28px) / 2 ≈ 14px */
+    }
+    .iv-input::placeholder{ line-height: 1.2; }
+    .iv-paste-btn{ padding: 0 16px; font-size: 15px; }
+  }
+
+  /* Aksiyon butonları: aynı satır, taşma yok */
+  .iv-actions{
+    width: min(92vw, 660px);
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .iv-actions .btn{
+    width: 100%;
+    border-radius: 2rem; font-weight: 700;
+    box-shadow: 0 6px 18px rgba(16, 172, 132, 0.22);
+    transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+    white-space: nowrap;
+    padding: 12px 18px;
+    font-size: 1rem;
+  }
+  .iv-actions .btn:hover{ transform: translateY(-1px) scale(1.02); }
+  .iv-actions .btn:active{ transform: translateY(0) scale(.99); }
+
+  /* Reklam kartı */
+  .iv-header-ad{
+    min-height: 60px; max-width: 550px; width: 85%;
+    background: rgba(255,255,255,0.34); border-radius: 1.2rem;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow: 0 2px 12px #6f47ff26;
+  }
+</style>
+
+<form method="POST"
+      action="{{ action_url }}"
+      class="mx-auto w-100 d-flex flex-column align-items-center iv-form"
+      data-requires-age-gate="1">
+
+  <!-- Input Group -->
+  <div class="iv-input-wrap">
+    {# textarea: placeholder mobilde 2 satır, masaüstünde ortalı görünür #}
+    <textarea name="instagram_url" id="instagram_url"
+              class="iv-input"
+              placeholder="{{ placeholder|default(_('Paste your Instagram link here...')) }}"
+              required autocomplete="off"></textarea>
+
+    <button type="button" id="pasteBtn" class="iv-paste-btn">
+      <i class="bi bi-clipboard2-check me-1"></i> {{ _('Paste') }}
+    </button>
+  </div>
+
+  <!-- Aynı satırda 2 buton -->
+  <div class="iv-actions">
+    <button type="submit"
+            class="btn text-white"
+            style="background: linear-gradient(135deg, #1dd1a1, #10ac84);">
+      <i class="bi bi-cloud-arrow-down me-2"></i> {{ _('Download') }}
+    </button>
+
+    <button type="reset"
+            class="btn text-white"
+            style="background: linear-gradient(135deg, #c44569, #e15f41); box-shadow: 0 6px 18px rgba(192, 57, 43, 0.24);">
+      <i class="bi bi-x-circle me-2"></i> {{ _('Clear') }}
+    </button>
+  </div>
+
+  {% if error %}
+    <div class="alert alert-danger mt-3 mb-0" style="max-width:490px; margin:auto;">
+      <i class="bi bi-exclamation-triangle me-2"></i>{{ error }}
+    </div>
+  {% endif %}
+
+  <!-- Paste için JS -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function(){
+      const pasteBtn = document.getElementById('pasteBtn');
+      const input    = document.getElementById('instagram_url');
+      if (navigator.clipboard && pasteBtn && input) {
+        pasteBtn.onclick = () =>
+          navigator.clipboard.readText().then(txt => {
+            input.value = txt;
+            input.focus();
+          });
+      } else if (pasteBtn) {
+        pasteBtn.disabled = true;
+      }
+    });
+  </script>
+
+  <!-- HEADER Ad Area (form altı) -->
+  {% from "ads/macros.html" import render_ad %}
+  <div class="w-100 mt-2 mb-1 d-flex justify-content-center">
+    <div class="iv-header-ad">
+      {{ render_ad("below_header") }}
+    </div>
+  </div>
+</form>

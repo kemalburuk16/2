@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="{{ lang or 'en' }}">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ _('Age & Terms Confirmation') }} · InstaVido</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; margin:0; background:#0e0e0e; color:#fff}
+  .card{max-width:720px;margin:8vh auto;background:#1a1a1a;border-radius:16px;padding:24px; box-shadow:0 10px 30px rgba(0,0,0,.35)}
+  label{display:flex;gap:10px;align-items:flex-start;margin:10px 0}
+  a{color:#7ad7ff;text-decoration:none}
+  .btn{padding:10px 16px;border:0;border-radius:10px;cursor:pointer}
+  .btn-primary{background:#7f5af0;color:#fff}
+  .btn-ghost{background:#333;color:#eee}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>{{ _('Please confirm to continue') }}</h2>
+    <form method="post">
+      <label><input type="checkbox" name="age13"> {{ _('I confirm I am 13+ years old.') }}</label>
+      <label><input type="checkbox" name="terms"> {{ _('I accept the') }} <a href="/{{ lang }}/terms" target="_blank">{{ _('Terms of Use') }}</a> & <a href="/{{ lang }}/privacy-policy" target="_blank">{{ _('Privacy Policy') }}</a>.</label>
+      <div style="display:flex; gap:10px; margin-top:14px;">
+        <a class="btn btn-ghost" href="https://www.google.com">{{ _('Cancel') }}</a>
+        <button class="btn btn-primary" type="submit">{{ _('Continue') }}</button>
+      </div>
+    </form>
+  </div>
+</body>
+</html>

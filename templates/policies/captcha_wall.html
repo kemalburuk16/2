@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="{{ get_locale() or 'en' }}"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ _('Verification') }} · InstaVido</title>
+<style>body{font-family:system-ui; background:#0e0e0e; color:#fff; margin:0}
+.card{max-width:640px;margin:10vh auto;background:#151515;border-radius:14px;padding:24px;text-align:center}
+.btn{padding:10px 16px;border:0;border-radius:10px;cursor:pointer;background:#7f5af0;color:#fff}
+.muted{opacity:.8}
+</style>
+</head><body>
+<div class="card">
+  <h2>{{ _('Just a quick check') }}</h2>
+  {% if sitekey %}
+    <form method="post" action="/captcha/verify">
+      <div class="g-recaptcha" data-sitekey="{{ sitekey }}"></div>
+      <input type="hidden" name="next" value="{{ request.referrer or url_for('index', lang=get_locale()) }}">
+      <button class="btn" style="margin-top:12px;">{{ _('Verify') }}</button>
+    </form>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  {% else %}
+    <p class="muted">{{ _('Rate limit exceeded. Please wait a moment and try again.') }}</p>
+  {% endif %}
+</div>
+</body></html>

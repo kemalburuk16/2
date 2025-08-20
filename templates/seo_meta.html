@@ -1,0 +1,26 @@
+{% macro seo_meta(meta) %}
+  <title>{{ meta.title }}</title>
+  <meta name="description" content="{{ meta.desc }}">
+  <meta name="keywords" content="{{ meta.keywords }}">
+
+  {# Hreflang alternates #}
+  {% if meta.alternates %}
+    {% for code, alt_url in meta.alternates.items() %}
+      <link rel="alternate" hreflang="{{ code }}" href="{{ alt_url }}">
+    {% endfor %}
+  {% endif %}
+
+  {# OG ve sosyal medya #}
+  <meta property="og:title" content="{{ meta.title }}">
+  <meta property="og:description" content="{{ meta.desc }}">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="InstaVido">
+  <meta property="og:url" content="{{ request.url }}">
+  {% if meta.og_image %}
+    <meta property="og:image" content="{{ meta.og_image }}">
+    <meta name="twitter:image" content="{{ meta.og_image }}">
+  {% endif %}
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ meta.title }}">
+  <meta name="twitter:description" content="{{ meta.desc }}">
+{% endmacro %}

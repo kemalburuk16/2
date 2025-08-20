@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+{% block title %}{{ profile.username if profile else 'Profile' }} · InstaVido{% endblock %}
+{% block meta_desc %}{{ _('View & download an Instagram profile: posts, stories, highlights and reels.') }}{% endblock %}
+
+{% block header %}
+<div class="w-100" style="min-height:140px;border-radius:0 0 18px 18px;
+  background:radial-gradient(1200px 360px at 20% -50%,#ff8bd6 0%,#6f47ff 40%,#59c7f9 72%,#36d1dc 100%);"></div>
+{% endblock %}
+
+{% block content %}
+{% from "ads/macros.html" import render_ad %}
+
+<style>
+  .pr-hero{position:relative;margin-top:-90px;margin-bottom:16px;border-radius:18px;padding:18px;color:#fff;
+    background:linear-gradient(90deg,rgba(111,71,255,.95),rgba(89,199,249,.95));box-shadow:0 14px 44px rgba(33,22,88,.22)}
+  .pr-hero-inner{display:flex;align-items:flex-start;gap:16px}
+  .pr-avatar{width:110px;height:110px;border-radius:50%;overflow:hidden;flex:0 0 auto;box-shadow:0 6px 24px rgba(0,0,0,.25);border:3px solid rgba(255,255,255,.65)}
+  .pr-avatar img{width:100%;height:100%;object-fit:cover}
+  .pr-meta{flex:1 1 auto;min-width:0}
+  .pr-username{display:flex;align-items:center;gap:8px;font-size:1.65rem;font-weight:800;letter-spacing:.2px}
+  .pr-stats{display:flex;gap:18px;margin:6px 0 8px 0;flex-wrap:wrap}
+  .pr-stat{font-weight:800}.pr-stat small{display:block;font-weight:600;opacity:.85;margin-top:-2px}
+  .pr-bio{font-weight:600;line-height:1.35;opacity:.95;word-break:break-word}
+  .pr-cta{margin-left:auto;display:flex;gap:8px;align-items:flex-start}
+  .btn-new{background:linear-gradient(135deg,#6f47ff,#59c7f9);color:#fff;border:0;border-radius:999px;padding:10px 14px;font-weight:800;box-shadow:0 6px 16px rgba(95,120,255,.28)}
+  @media (max-width:768px){.pr-hero-inner{flex-direction:column}.pr-cta{margin-left:0}.pr-username{font-size:1.35rem}.pr-avatar{width:86px;height:86px}}
+
+  .pr-tabs{margin-top:10px}
+  .nav-pr{display:flex;gap:8px;overflow:auto;padding:6px;border-radius:12px;background:linear-gradient(90deg,#f4f1ff,#eaf7ff);border:1px solid #e8e5ff}
+  .nav-pr .nav-link{border:0;border-radius:10px;padding:10px 14px;font-weight:800;color:#6b59fd;white-space:nowrap}
+  .nav-pr .nav-link.active{color:#fff;background:linear-gradient(135deg,#6f47ff,#59c7f9);box-shadow:0 4px 14px rgba(111,71,255,.25)}
+
+  .datebar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0}
+  .datepill{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:#fff;border:1px solid #ece9ff;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+  .datepill input[type="date"]{border:0;outline:none;height:30px}
+  .datepill .bi{color:#6b59fd}
+  .datebar .btn{border-radius:999px}
+  @media (max-width:576px){.datebar{flex-direction:column;align-items:stretch}.datebar .btn{width:100%}}
+
+  .pr-grid{display:grid;gap:14px;margin-top:14px}
+  @media (max-width:575.98px){.pr-grid{grid-template-columns:1fr}}
+  @media (min-width:576px) and (max-width:991.98px){.pr-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media (min-width:992px){.pr-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+  .pr-card{position:relative;border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 8px 24px rgba(0,0,0,.08)}
+  .thumb-wrap{position:relative;padding:10px}
+  .nine16{position:relative;width:100%;aspect-ratio:9/16;border-radius:14px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#000}
+  .square{position:relative;width:100%;aspect-ratio:1/1;border-radius:14px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#000}
+  .nine16 img,.square img{width:100%;height:100%;object-fit:cover;display:block}
+
+  .frame-video{border:3px solid transparent;background:linear-gradient(#0000,#0000) padding-box,linear-gradient(45deg,#ff58b1,#b96bff,#59c7f9,#ff58b1) border-box;background-size:200% 200%;animation:spinGrad 6s ease infinite;border-radius:16px}
+  .frame-photo{border:3px solid transparent;background:linear-gradient(#0000,#0000) padding-box,linear-gradient(135deg,#1dd1a1,#36d1dc) border-box;border-radius:16px}
+  @keyframes spinGrad{0%{background-position:0 0}50%{background-position:100% 100%}100%{background-position:0 0}}
+
+  .zoom-btn{position:absolute;right:12px;top:12px;z-index:3;border:0;width:36px;height:36px;border-radius:50%;background:#fff;color:#6b59fd;box-shadow:0 2px 12px rgba(66,52,140,.25);display:flex;align-items:center;justify-content:center;cursor:pointer}
+
+  .badges{position:absolute;left:12px;top:12px;z-index:3;display:flex;gap:6px;flex-wrap:wrap}
+  .badge-chip{display:inline-flex;align-items:center;gap:6px;background:#ffffffee;color:#3b2f7a;border-radius:999px;padding:6px 9px;font-weight:800;font-size:.85rem;box-shadow:0 2px 10px rgba(0,0,0,.16)}
+  .badge-chip .bi{font-size:1rem;opacity:.9}
+
+  .pr-actions{padding:10px 12px 14px;display:flex;justify-content:center;border-top:1px solid #f6f4ff}
+  .btn-dl{border:0;border-radius:12px;font-weight:800;padding:10px 16px;background:linear-gradient(135deg,#1dd1a1,#10ac84);color:#fff;box-shadow:0 6px 16px rgba(16,172,132,.24)}
+  .btn-dl:hover{transform:translateY(-1px)}
+
+  .pr-ad{border-radius:16px;background:linear-gradient(135deg,#fff7fe,#e8f3ff);box-shadow:0 4px 14px rgba(127,97,255,.12);display:flex;align-items:center;justify-content:center;min-height:220px;border:1px dashed #bfa7ff66;padding:10px}
+  .ad-300x250{width:100%;max-width:300px;min-height:250px;display:flex;align-items:center;justify-content:center;margin:10px auto}
+  .ad-120x600{width:120px;min-height:600px;display:flex;align-items:center;justify-content:center;margin:10px auto}
+
+  .hl-tray{display:flex;gap:10px;overflow:auto;padding:10px 4px;margin-top:8px}
+  .hl-pill{border:0;background:#fff;border-radius:18px;padding:10px 8px;display:flex;flex-direction:column;align-items:center;row-gap:6px;box-shadow:0 2px 10px rgba(0,0,0,.08);cursor:pointer;width:110px}
+  .hl-ava{width:64px;height:64px;border-radius:50%;overflow:hidden;flex:0 0 auto;border:3px solid #e4dfff;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+  .hl-ava img{width:100%;height:100%;object-fit:cover}
+  .hl-title{font-weight:800;font-size:.9rem;text-align:center;max-width:92px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hl-pill.active{background:linear-gradient(135deg,#6f47ff,#59c7f9);color:#fff}
+
+  #pr-modal{display:none;position:fixed;inset:0;z-index:1040;background:rgba(18,19,30,.92);align-items:center;justify-content:center}
+  #pr-modal.open{display:flex}
+  #pr-modal .overlay{position:absolute;inset:0}
+  .prm-wrap{--ctrl-h:58px;position:relative;display:flex;background:#fff;border-radius:18px;box-shadow:0 10px 50px rgba(32,16,90,.45);max-width:1100px;width:97vw;max-height:90vh;overflow:hidden}
+  .prm-left{flex:1.6;background:#0b0b12;display:flex;align-items:center;justify-content:center;padding-bottom:var(--ctrl-h)}
+  .prm-right{flex:1;background:#f8f7ff;display:flex;align-items:center;justify-content:center;padding:10px}
+  .prm-media{max-width:96%;max-height:calc(80vh - var(--ctrl-h));object-fit:contain;background:#000;border-radius:12px}
+  .prm-media.photo{background:#eef7fb}
+  .prm-close{position:absolute;top:10px;right:14px;font-size:2rem;background:none;border:0;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.6);z-index:2;cursor:pointer}
+  .prm-nav{position:absolute;top:50%;transform:translateY(-50%);border:0;width:46px;height:46px;border-radius:50%;background:#fff;color:#7a67ff;box-shadow:0 2px 12px rgba(66,52,140,.35);cursor:pointer;z-index:2}
+  .prm-prev{left:10px}.prm-next{right:10px}
+  .prm-controls{position:absolute;left:0;right:0;bottom:0;height:var(--ctrl-h);background:linear-gradient(90deg,#ecf0fd 60%,#f6e0f8 100%);border-top:1px solid #e2dbfc;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;z-index:2}
+  .prm-controls .btn-dl{padding:9px 14px}
+  .prm-ad-desktop,.prm-ad-mobile{width:100%}
+  .prm-ad-desktop{display:none}.prm-ad-mobile{display:block}
+  @media (min-width:992px){.prm-ad-desktop{display:block}.prm-ad-mobile{display:none}}
+  @media (max-width:720px){.prm-wrap{flex-direction:column;--ctrl-h:66px}.prm-left,.prm-right{min-height:110px}}
+</style>
+
+{% set p = profile or {} %}
+{% set sections = sections or {'posts':[], 'stories':[], 'highlights':[], 'reels':[]} %}
+
+<section class="pr-hero">
+  <div class="pr-hero-inner">
+    <button class="pr-avatar p-0" style="background:none;border:0" onclick="openAvatar()">
+      <img src="{{ sign_img_proxy(p.avatar) if p.avatar else 'https://i.imgur.com/1H1Z1Qp.png' }}" alt="avatar" referrerpolicy="no-referrer">
+    </button>
+    <div class="pr-meta">
+      <div class="pr-username">@{{ p.username or 'username' }}</div>
+      <div class="pr-stats">
+        <div class="pr-stat">{{ p.posts_count or 0 }} <small>{{ _('posts') }}</small></div>
+        <div class="pr-stat">{{ p.followers or 0 }} <small>{{ _('followers') }}</small></div>
+        <div class="pr-stat">{{ p.following or 0 }} <small>{{ _('following') }}</small></div>
+      </div>
+      {% if p.full_name or p.bio %}
+      <div class="pr-bio"><strong>{{ p.full_name or '' }}</strong>{% if p.full_name and p.bio %} — {% endif %}{{ p.bio or '' }}</div>
+      {% endif %}
+    </div>
+    <div class="pr-cta">
+      <a class="btn btn-sm btn-light btn-new" href="{% if get_locale() == 'en' %}{{ url_for('index', lang='en')|replace('/en','') }}{% else %}{{ url_for('index', lang=get_locale()) }}{% endif %}">
+        <i class="bi bi-plus-circle me-1"></i>{{ _('New Download') }}
+      </a>
+    </div>
+  </div>
+</section>
+
+<div class="pr-tabs">
+  <ul class="nav nav-pills nav-pr" id="prTab" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="tab-posts" data-label="{{ _('POSTS') }}" data-bs-toggle="tab" data-bs-target="#pane-posts" type="button" role="tab">{{ _('POSTS') }}</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="tab-stories" data-label="{{ _('STORIES') }}" data-bs-toggle="tab" data-bs-target="#pane-stories" type="button" role="tab">{{ _('STORIES') }}</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="tab-highlights" data-label="{{ _('HIGHLIGHTS') }}" data-bs-toggle="tab" data-bs-target="#pane-highlights" type="button" role="tab">{{ _('HIGHLIGHTS') }}</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="tab-reels" data-label="{{ _('REELS') }}" data-bs-toggle="tab" data-bs-target="#pane-reels" type="button" role="tab">{{ _('REELS') }}</button>
+    </li>
+  </ul>
+</div>
+
+<div class="mt-2 mb-2">
+  {{ render_ad("profile_top") }}
+</div>
+
+<template id="tpl-ad-posts"><div class="pr-ad"><div class="ad-300x250">{{ render_ad("profile_posts_300x250") }}</div></div></template>
+<template id="tpl-ad-highlights"><div class="pr-ad"><div class="ad-300x250">{{ render_ad("profile_highlights_300x250") }}</div></div></template>
+<template id="tpl-ad-stories"><div class="pr-ad"><div class="ad-120x600">{{ render_ad("profile_stories_120x600") }}</div></div></template>
+<template id="tpl-ad-reels"><div class="pr-ad"><div class="ad-120x600">{{ render_ad("profile_reels_120x600") }}</div></div></template>
+
+<div class="tab-content">
+  <div class="tab-pane fade show active" id="pane-posts" role="tabpanel" aria-labelledby="tab-posts">
+    <div class="datebar">
+      <div class="datepill"><i class="bi bi-calendar-event"></i><input type="date" class="form-control form-control-sm" id="posts-date-from"></div>
+      <span>—</span>
+      <div class="datepill"><i class="bi bi-calendar2-check"></i><input type="date" class="form-control form-control-sm" id="posts-date-to"></div>
+      <button class="btn btn-sm btn-primary" id="posts-apply">{{ _('Apply') }}</button>
+      <button class="btn btn-sm btn-outline-secondary" id="posts-clear">{{ _('Reset') }}</button>
+    </div>
+    <div id="loader-posts" class="text-center my-3" style="display:none"><div class="spinner-border text-primary" role="status"></div></div>
+    <div id="grid-posts" class="pr-grid"></div>
+  </div>
+
+  <div class="tab-pane fade" id="pane-stories" role="tabpanel" aria-labelledby="tab-stories">
+    <div id="loader-stories" class="text-center my-3" style="display:none"><div class="spinner-border text-primary" role="status"></div></div>
+    <div id="grid-stories" class="pr-grid"></div>
+  </div>
+
+  <div class="tab-pane fade" id="pane-highlights" role="tabpanel" aria-labelledby="tab-highlights">
+    <div class="hl-tray" id="hl-tray"></div>
+    <div id="loader-highlights" class="text-center my-3" style="display:none"><div class="spinner-border text-primary" role="status"></div></div>
+    <div id="grid-highlights" class="pr-grid"></div>
+  </div>
+
+  <div class="tab-pane fade" id="pane-reels" role="tabpanel" aria-labelledby="tab-reels">
+    <div class="datebar">
+      <div class="datepill"><i class="bi bi-calendar-event"></i><input type="date" class="form-control form-control-sm" id="reels-date-from"></div>
+      <span>—</span>
+      <div class="datepill"><i class="bi bi-calendar2-check"></i><input type="date" class="form-control form-control-sm" id="reels-date-to"></div>
+      <button class="btn btn-sm btn-primary" id="reels-apply">{{ _('Apply') }}</button>
+      <button class="btn btn-sm btn-outline-secondary" id="reels-clear">{{ _('Reset') }}</button>
+    </div>
+    <div id="loader-reels" class="text-center my-3" style="display:none"><div class="spinner-border text-primary" role="status"></div></div>
+    <div id="grid-reels" class="pr-grid"></div>
+  </div>
+</div>
+
+<div id="pr-modal" role="dialog" aria-modal="true">
+  <div class="overlay" onclick="closePrModal()"></div>
+  <div class="prm-wrap">
+    <div class="prm-left"><div id="prm-preview"></div></div>
+    <div class="prm-right">
+      <div class="prm-ad-desktop">
+        <div id="ad-modal-posts-d" style="display:none">{{ render_ad("profile_modal_posts_desktop") }}</div>
+        <div id="ad-modal-stories-d" style="display:none">{{ render_ad("profile_modal_stories_desktop") }}</div>
+        <div id="ad-modal-highlights-d" style="display:none">{{ render_ad("profile_modal_highlights_desktop") }}</div>
+        <div id="ad-modal-reels-d" style="display:none">{{ render_ad("profile_modal_reels_desktop") }}</div>
+      </div>
+      <div class="prm-ad-mobile">
+        <div id="ad-modal-posts-m" style="display:none">{{ render_ad("profile_modal_posts_mobile") }}</div>
+        <div id="ad-modal-stories-m" style="display:none">{{ render_ad("profile_modal_stories_mobile") }}</div>
+        <div id="ad-modal-highlights-m" style="display:none">{{ render_ad("profile_modal_highlights_mobile") }}</div>
+        <div id="ad-modal-reels-m" style="display:none">{{ render_ad("profile_modal_reels_mobile") }}</div>
+      </div>
+    </div>
+    <button class="prm-close" onclick="closePrModal()" aria-label="Close">&times;</button>
+    <button class="prm-nav prm-prev" onclick="navPrev()" title="Prev">&#8678;</button>
+    <button class="prm-nav prm-next" onclick="navNext()" title="Next">&#8680;</button>
+    <div class="prm-controls">
+      <div id="prm-type" class="fw-bold text-dark"></div>
+      <div id="prm-dl"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===================== Templated data ===================== */
+const USERNAME = (() => {
+  const fromTpl = {{ (profile.username or '')|tojson }};
+  if (fromTpl) return fromTpl;
+  const m = location.pathname.match(/\/u\/([^\/?#]+)/)
+         || location.pathname.match(/\/profile\/([^\/?#]+)/)
+         || location.pathname.match(/^\/([A-Za-z0-9._]+)\/?$/);
+  return m ? decodeURIComponent(m[1]) : '';
+})();
+const SECTIONS   = {{ (sections or {}) | tojson }};
+const AVATAR_URL = {{ (profile.avatar or '') | tojson }};
+
+/* ===================== i18n strings (Babel) ===================== */
+const t_loading_more = {{ _('Loading more…')|tojson }};
+const t_all_done     = {{ _("That's all.")|tojson }};
+const t_retry_scroll = {{ _('An error occurred. Scroll again to retry.')|tojson }};
+const t_photo        = {{ _('Photo')|tojson }};
+const t_video        = {{ _('Video')|tojson }};
+
+/* ===================== API endpoints ===================== */
+const API_FEED     = (q='') => `/api/u/${encodeURIComponent(USERNAME)}/feed${q}`;
+const API_REELS    = (q='') => `/api/u/${encodeURIComponent(USERNAME)}/reels${q}`;
+const API_HL_TRAY  =          `/api/u/${encodeURIComponent(USERNAME)}/hl_tray`;
+const API_HL_ITEMS = (hid) => `/api/u/${encodeURIComponent(USERNAME)}/hl/${encodeURIComponent(hid)}`;
+
+/* ===================== Görsel fallback ===================== */
+const FALLBACK_SVG = 'data:image/svg+xml;utf8,'+encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160">
+     <defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#e8e5ff"/><stop offset="1" stop-color="#eaf7ff"/></linearGradient></defs>
+     <rect width="160" height="160" fill="url(#g)"/>
+     <g fill="#9aa0b3" opacity=".75">
+       <rect x="45" y="48" width="70" height="50" rx="6"/>
+       <circle cx="68" cy="65" r="10"/>
+       <rect x="75" y="70" width="28" height="12" rx="6"/>
+     </g>
+   </svg>`
+);
+
+/* ===================== Helpers ===================== */
+const kfmt = (n)=>{ n=parseInt(n||0,10);
+  if(n>=1_000_000) return (Math.round(n/100000)/10)+'M';
+  if(n>=1_000)     return (Math.round(n/100)/10)+'K';
+  return (isNaN(n)?'0':String(n));
+};
+const stripQuery=(u)=>{ try{ return (u||'').split('?')[0]; }catch(_){ return u||''; } };
+const isVideo = (it)=> (it?.type==='video');
+const pickThumb = (it)=>{
+  if (!it) return '';
+  return it.type==='image'
+    ? (it.url || it.download_url || it.thumb || '')
+    : (it.thumb || it.url || it.download_url || '');
+};
+const pickPhoto = (it)=> it?.url || it?.download_url || it?.thumb || '';
+// (İndir) – istersen burada kendi proxy/sign endpoint’ine çevirebilirsin
+const PROXY_DL = (u, fn)=> `/download?u=${encodeURIComponent(u||'')}&filename=${encodeURIComponent(fn||'file')}`;
+const rand57 = ()=> 5 + Math.floor(Math.random()*3);
+
+/* ===================== Reklam yardımcıları ===================== */
+function adHTMLFor(listKey){
+  const map = { posts:'tpl-ad-posts', highlights:'tpl-ad-highlights', stories:'tpl-ad-stories', reels:'tpl-ad-reels' };
+  const t = document.getElementById(map[listKey]);
+  return t ? t.innerHTML : '';
+}
+function injectHTML(targetEl, html){
+  const tmp = document.createElement('div'); tmp.innerHTML = html;
+  tmp.querySelectorAll('script').forEach(old=>{
+    const s = document.createElement('script');
+    for (const a of old.attributes) s.setAttribute(a.name, a.value);
+    s.text = old.text || old.textContent || '';
+    old.replaceWith(s);
+  });
+  targetEl.append(...tmp.childNodes);
+}
+
+/* ===================== State ===================== */
+const state = {
+  posts     : { items:[], next:null, loading:false, done:false,  seen:new Set(), ads:{count:0,next:rand57()} },
+  reels     : { items:[], next:null, loading:false, done:false,  seen:new Set(), ads:{count:0,next:rand57()}, lastSrc:null, repeat:0 },
+  stories   : { items:[], next:null, loading:false, done:true,   seen:new Set(), ads:{count:0,next:rand57()} },
+  highlights: { items:[], next:null, loading:false, done:true,   seen:new Set(), ads:{count:0,next:rand57()} },
+  hl        : { trayLoaded:false, current:null, items:[] },
+  avatar    : [],
+  io : null
+};
+const gridEl = (k)=> document.getElementById(`grid-${k}`);
+const showLoader=(k)=>{ const el=document.getElementById(`loader-${k}`); if(el) el.style.display='block'; };
+const hideLoader=(k)=>{ const el=document.getElementById(`loader-${k}`); if(el) el.style.display='none'; };
+
+/* ===================== Alt sentinel (daima en altta) ===================== */
+function ensureSentinel(k){
+  const g=gridEl(k); if(!g) return null;
+  let s=g.querySelector('.load-more');
+  if(!s){
+    s=document.createElement('div');
+    s.className='load-more';
+    s.dataset.listkey=k;
+    s.innerHTML=`<div class="d-flex align-items-center justify-content-center gap-2 p-3"
+                    style="grid-column:1 / -1;color:#6b59fd;font-weight:800;">
+      <span class="spinner-border spinner-border-sm" role="status"></span>
+      <span class="lm-text">${t_loading_more}</span>
+    </div>`;
+    g.appendChild(s);
+  } else {
+    // her çağrıda sona taşı
+    g.appendChild(s);
+  }
+  return s;
+}
+{% endblock %}

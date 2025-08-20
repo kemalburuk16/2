@@ -1,0 +1,31 @@
+/* --- Hero Başlık Ortak Kurallar (tüm sayfalar) --- */
+:root{
+  --hero-min: 22px;   /* mobil taban */
+  --hero-fluid: 4.6vw;/* akışkan ölçek */
+  --hero-max: 42px;   /* masaüstü tavan */
+}
+
+.hero-title{
+  font-size: clamp(var(--hero-min), var(--hero-fluid), var(--hero-max));
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 0;
+  padding: 0 10px;
+  color: #fff;
+  text-wrap: balance;
+  text-shadow: 0 2px 8px rgba(0,0,0,.25);
+  max-width: 980px;
+  margin-inline: auto;
+}
+
+/* İsteğe göre sayfa bazlı varyantlar */
+.hero--sm { --hero-max: 36px; --hero-fluid: 4.2vw; }
+.hero--md { --hero-max: 42px; --hero-fluid: 4.6vw; } /* varsayılan gibi */
+.hero--lg { --hero-max: 52px; --hero-fluid: 5.2vw; }
+
+/* Logo/üst boşluk uyumu (mobilde biraz nefes) */
+.page-hero .page-logo{ display:block; }
+@media (max-width: 575.98px){
+  .page-hero { padding-top: 2px; }
+}
