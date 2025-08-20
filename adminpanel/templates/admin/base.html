@@ -43,6 +43,9 @@
 
       <a class="nav-link {% if request.endpoint=='blacklist_admin.page' %}active{% endif %}"
          href="{{ url_for('blacklist_admin.page') }}">🚫 Blacklist</a>
+
+      <a class="nav-link {% if 'automation' in request.endpoint %}active{% endif %}"
+         href="{{ url_for('admin.automation_dashboard') }}">🤖 Session Otomasyon</a>
     </nav>
     <div class="iv-sidebar-footer mt-3">
       <a class="btn btn-outline-light w-100" href="{{ url_for('admin.logout') }}">🚪 Çıkış Yap</a>

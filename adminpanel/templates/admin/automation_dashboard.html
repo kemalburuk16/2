@@ -1,0 +1,381 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Session Otomasyon - Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1>🤖 Session Otomasyon Dashboard</h1>
+  <div class="d-flex gap-2">
+    <button class="btn btn-primary" onclick="refreshData()">
+      <i class="bi bi-arrow-clockwise"></i> Yenile
+    </button>
+    <button class="btn btn-success" onclick="runManualActivity()">
+      <i class="bi bi-play-fill"></i> Manuel Aktivite
+    </button>
+  </div>
+</div>
+
+{% if error %}
+<div class="alert alert-danger">{{ error }}</div>
+{% else %}
+
+<!-- Status Cards -->
+<div class="row mb-4">
+  <div class="col-md-3">
+    <div class="card border-0 bg-primary text-white">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <h6 class="card-title mb-0">Toplam Session</h6>
+            <h3 class="mb-0">{{ session_stats.total }}</h3>
+          </div>
+          <i class="bi bi-database fs-1 opacity-50"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-3">
+    <div class="card border-0 bg-success text-white">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <h6 class="card-title mb-0">Aktif Session</h6>
+            <h3 class="mb-0">{{ session_stats.active }}</h3>
+          </div>
+          <i class="bi bi-check-circle fs-1 opacity-50"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-3">
+    <div class="card border-0 bg-warning text-white">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <h6 class="card-title mb-0">Bloklu Session</h6>
+            <h3 class="mb-0">{{ session_stats.blocked }}</h3>
+          </div>
+          <i class="bi bi-exclamation-circle fs-1 opacity-50"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-3">
+    <div class="card border-0 bg-danger text-white">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <h6 class="card-title mb-0">Geçersiz Session</h6>
+            <h3 class="mb-0">{{ session_stats.invalid }}</h3>
+          </div>
+          <i class="bi bi-x-circle fs-1 opacity-50"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Automation Control -->
+<div class="row mb-4">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Otomasyon Kontrolü</h5>
+      </div>
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <span>Otomasyon Durumu:</span>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="automationToggle" 
+                   {% if scheduler_status.enabled %}checked{% endif %}
+                   onchange="toggleAutomation()">
+            <label class="form-check-label" for="automationToggle">
+              <span id="automationStatus">
+                {% if scheduler_status.enabled %}Aktif{% else %}Pasif{% endif %}
+              </span>
+            </label>
+          </div>
+        </div>
+        
+        <div class="row text-center">
+          <div class="col-6">
+            <small class="text-muted">Son Aktivite</small>
+            <div id="lastActivity">
+              {% if scheduler_status.last_activity %}
+                {{ scheduler_status.last_activity[:16].replace('T', ' ') }}
+              {% else %}
+                Henüz yok
+              {% endif %}
+            </div>
+          </div>
+          <div class="col-6">
+            <small class="text-muted">Sonraki Zamanlanmış</small>
+            <div id="nextScheduled">
+              {% if scheduler_status.next_scheduled %}
+                {{ scheduler_status.next_scheduled[:16].replace('T', ' ') }}
+              {% else %}
+                Belirlenmemiş
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Günlük Limitler</h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-4 text-center">
+            <div class="mb-2">
+              <i class="bi bi-heart text-danger fs-4"></i>
+            </div>
+            <small class="text-muted">Beğeni</small>
+            <div class="fw-bold">{{ limits.likes }}/gün</div>
+          </div>
+          <div class="col-4 text-center">
+            <div class="mb-2">
+              <i class="bi bi-person-plus text-primary fs-4"></i>
+            </div>
+            <small class="text-muted">Takip</small>
+            <div class="fw-bold">{{ limits.follows }}/gün</div>
+          </div>
+          <div class="col-4 text-center">
+            <div class="mb-2">
+              <i class="bi bi-chat text-success fs-4"></i>
+            </div>
+            <small class="text-muted">Yorum</small>
+            <div class="fw-bold">{{ limits.comments }}/gün</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Activity Summary -->
+<div class="row mb-4">
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Son 7 Gün Aktivite Özeti</h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-3 text-center">
+            <h3 class="text-primary">{{ activity_summary.total_activities }}</h3>
+            <small class="text-muted">Toplam Aktivite</small>
+          </div>
+          <div class="col-md-3 text-center">
+            <h3 class="text-success">{{ activity_summary.successful_activities }}</h3>
+            <small class="text-muted">Başarılı</small>
+          </div>
+          <div class="col-md-3 text-center">
+            <h3 class="text-danger">{{ activity_summary.failed_activities }}</h3>
+            <small class="text-muted">Başarısız</small>
+          </div>
+          <div class="col-md-3 text-center">
+            <h3 class="text-info">{{ activity_summary.sessions_used }}</h3>
+            <small class="text-muted">Kullanılan Session</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Active Sessions -->
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Aktif Session'lar</h5>
+    <a href="{{ url_for('admin.automation_sessions') }}" class="btn btn-sm btn-outline-primary">
+      Tümünü Gör
+    </a>
+  </div>
+  <div class="card-body">
+    {% if active_sessions %}
+    <div class="table-responsive">
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>Kullanıcı</th>
+            <th>Son Kullanım</th>
+            <th>Başarı/Başarısızlık</th>
+            <th>Durum</th>
+            <th>İşlemler</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for session in active_sessions %}
+          <tr>
+            <td>{{ session.user }}</td>
+            <td>{{ session.last_used or 'Hiç' }}</td>
+            <td>
+              <span class="badge bg-success">{{ session.success_count or 0 }}</span>
+              <span class="badge bg-danger">{{ session.fail_count or 0 }}</span>
+            </td>
+            <td>
+              <span class="badge bg-success">{{ session.status.title() }}</span>
+            </td>
+            <td>
+              <button class="btn btn-sm btn-primary" 
+                      onclick="runActivityForSession('{{ session.user }}')">
+                <i class="bi bi-play"></i>
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center text-muted py-4">
+      <i class="bi bi-inbox fs-1"></i>
+      <p class="mt-2">Aktif session bulunamadı</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endif %}
+
+<script>
+async function toggleAutomation() {
+  const toggle = document.getElementById('automationToggle');
+  const status = document.getElementById('automationStatus');
+  
+  try {
+    const response = await fetch('/admin/automation/api/toggle', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ enabled: toggle.checked })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      status.textContent = result.enabled ? 'Aktif' : 'Pasif';
+      showToast(result.message, 'success');
+    } else {
+      throw new Error(result.error);
+    }
+  } catch (error) {
+    toggle.checked = !toggle.checked; // Revert
+    showToast('Hata: ' + error.message, 'error');
+  }
+}
+
+async function runManualActivity() {
+  try {
+    showToast('Manuel aktivite başlatılıyor...', 'info');
+    
+    const response = await fetch('/admin/automation/api/run-activity', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({})
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      showToast('Aktivite başarıyla tamamlandı!', 'success');
+      setTimeout(refreshData, 2000);
+    } else {
+      showToast('Aktivite başarısız: ' + (result.error || 'Bilinmeyen hata'), 'error');
+    }
+  } catch (error) {
+    showToast('Hata: ' + error.message, 'error');
+  }
+}
+
+async function runActivityForSession(sessionUser) {
+  try {
+    showToast(`${sessionUser} için aktivite başlatılıyor...`, 'info');
+    
+    const response = await fetch('/admin/automation/api/run-activity', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ session_user: sessionUser })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      showToast('Aktivite başarıyla tamamlandı!', 'success');
+      setTimeout(refreshData, 2000);
+    } else {
+      showToast('Aktivite başarısız: ' + (result.error || 'Bilinmeyen hata'), 'error');
+    }
+  } catch (error) {
+    showToast('Hata: ' + error.message, 'error');
+  }
+}
+
+async function refreshData() {
+  try {
+    showToast('Veriler yenileniyor...', 'info');
+    
+    const response = await fetch('/admin/automation/api/refresh-sessions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      showToast('Veriler başarıyla yenilendi!', 'success');
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      showToast('Yenileme başarısız: ' + (result.error || 'Bilinmeyen hata'), 'error');
+    }
+  } catch (error) {
+    showToast('Hata: ' + error.message, 'error');
+  }
+}
+
+function showToast(message, type) {
+  // Simple toast implementation
+  const toast = document.createElement('div');
+  toast.className = `alert alert-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info'} position-fixed`;
+  toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+  toast.textContent = message;
+  
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.remove();
+  }, 5000);
+}
+
+// Auto-refresh status every 30 seconds
+setInterval(async () => {
+  try {
+    const response = await fetch('/admin/automation/api/status');
+    const status = await response.json();
+    
+    document.getElementById('lastActivity').textContent = 
+      status.last_activity ? status.last_activity.substring(0, 16).replace('T', ' ') : 'Henüz yok';
+    
+    document.getElementById('nextScheduled').textContent = 
+      status.next_scheduled ? status.next_scheduled.substring(0, 16).replace('T', ' ') : 'Belirlenmemiş';
+  } catch (error) {
+    console.error('Status update failed:', error);
+  }
+}, 30000);
+</script>
+{% endblock %}

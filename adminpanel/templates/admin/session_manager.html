@@ -1,0 +1,387 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Session Yönetimi - Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1>🛠 Session Yönetimi</h1>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('admin.automation_dashboard') }}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Dashboard'a Dön
+    </a>
+    <button class="btn btn-primary" onclick="refreshSessions()">
+      <i class="bi bi-arrow-clockwise"></i> Yenile
+    </button>
+  </div>
+</div>
+
+{% if error %}
+<div class="alert alert-danger">{{ error }}</div>
+{% else %}
+
+<!-- Session Statistics -->
+<div class="row mb-4">
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Session İstatistikleri</h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-3 text-center">
+            <h3 class="text-primary">{{ all_sessions|length }}</h3>
+            <small class="text-muted">Toplam Session</small>
+          </div>
+          <div class="col-md-3 text-center">
+            <h3 class="text-success">{{ active_sessions|length }}</h3>
+            <small class="text-muted">Aktif Session</small>
+          </div>
+          <div class="col-md-3 text-center">
+            <h3 class="text-warning">
+              {{ all_sessions|selectattr('blocked', 'equalto', true)|list|length }}
+            </h3>
+            <small class="text-muted">Bloklu Session</small>
+          </div>
+          <div class="col-md-3 text-center">
+            <h3 class="text-danger">
+              {{ all_sessions|selectattr('status', 'equalto', 'invalid')|list|length }}
+            </h3>
+            <small class="text-muted">Geçersiz Session</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Sessions Table -->
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Tüm Session'lar</h5>
+    <div class="d-flex gap-2">
+      <select class="form-select form-select-sm" style="width: auto;" onchange="filterSessions(this.value)">
+        <option value="">Tüm Durumlar</option>
+        <option value="active">Aktif</option>
+        <option value="invalid">Geçersiz</option>
+        <option value="blocked">Bloklu</option>
+      </select>
+    </div>
+  </div>
+  <div class="card-body p-0">
+    {% if all_sessions %}
+    <div class="table-responsive">
+      <table class="table table-hover mb-0" id="sessionsTable">
+        <thead class="table-light">
+          <tr>
+            <th>Kullanıcı</th>
+            <th>User ID</th>
+            <th>Son Kullanım</th>
+            <th>Durum</th>
+            <th>Başarı/Başarısızlık</th>
+            <th>Günlük Aktivite</th>
+            <th>İşlemler</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for session in all_sessions %}
+          <tr class="session-row" data-status="{{ session.status }}" data-blocked="{{ session.blocked }}">
+            <td>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-person-circle me-2"></i>
+                <strong>{{ session.user }}</strong>
+              </div>
+            </td>
+            <td>
+              <small class="text-muted">{{ session.ds_user_id }}</small>
+            </td>
+            <td>
+              {% if session.last_used %}
+                <small>{{ session.last_used }}</small>
+              {% else %}
+                <small class="text-muted">Hiç kullanılmamış</small>
+              {% endif %}
+            </td>
+            <td>
+              {% if session.blocked %}
+                <span class="badge bg-warning">Bloklu</span>
+              {% elif session.status == 'active' %}
+                <span class="badge bg-success">Aktif</span>
+              {% elif session.status == 'invalid' %}
+                <span class="badge bg-danger">Geçersiz</span>
+              {% else %}
+                <span class="badge bg-secondary">{{ session.status.title() }}</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="d-flex gap-1">
+                <span class="badge bg-success" title="Başarılı">
+                  {{ session.success_count or 0 }}
+                </span>
+                <span class="badge bg-danger" title="Başarısız">
+                  {{ session.fail_count or 0 }}
+                </span>
+              </div>
+            </td>
+            <td>
+              {% set activity = session_activities.get(session.sessionid, {}) %}
+              <div class="d-flex gap-1 flex-wrap">
+                <span class="badge bg-info" title="Beğeni">
+                  ❤️ {{ activity.get('likes', 0) }}
+                </span>
+                <span class="badge bg-primary" title="Story">
+                  📖 {{ activity.get('stories', 0) }}
+                </span>
+                <span class="badge bg-success" title="Yorum">
+                  💬 {{ activity.get('comments', 0) }}
+                </span>
+              </div>
+            </td>
+            <td>
+              <div class="btn-group btn-group-sm">
+                {% if session.status == 'active' and not session.blocked %}
+                <button class="btn btn-primary btn-sm" 
+                        onclick="runActivityForSession('{{ session.user }}')"
+                        title="Aktivite Çalıştır">
+                  <i class="bi bi-play"></i>
+                </button>
+                {% endif %}
+                <button class="btn btn-info btn-sm" 
+                        onclick="viewSessionDetails('{{ session.sessionid }}')"
+                        title="Detayları Gör">
+                  <i class="bi bi-eye"></i>
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" 
+                        onclick="viewSessionActivity('{{ session.sessionid }}')"
+                        title="Aktivite Geçmişi">
+                  <i class="bi bi-clock-history"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center text-muted py-5">
+      <i class="bi bi-inbox fs-1"></i>
+      <p class="mt-2">Henüz session bulunamadı</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endif %}
+
+<!-- Session Details Modal -->
+<div class="modal fade" id="sessionDetailsModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Session Detayları</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="sessionDetailsContent">
+        <!-- Content will be loaded here -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Session Activity Modal -->
+<div class="modal fade" id="sessionActivityModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Session Aktivite Detayları</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="sessionActivityContent">
+        <!-- Content will be loaded here -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function filterSessions(status) {
+  const rows = document.querySelectorAll('.session-row');
+  
+  rows.forEach(row => {
+    const rowStatus = row.dataset.status;
+    const rowBlocked = row.dataset.blocked === 'true';
+    
+    let show = true;
+    
+    if (status === 'blocked') {
+      show = rowBlocked;
+    } else if (status && status !== '') {
+      show = rowStatus === status && !rowBlocked;
+    }
+    
+    row.style.display = show ? '' : 'none';
+  });
+}
+
+async function refreshSessions() {
+  try {
+    showToast('Session'lar yenileniyor...', 'info');
+    
+    const response = await fetch('/admin/automation/api/refresh-sessions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      showToast('Session\'lar başarıyla yenilendi!', 'success');
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      showToast('Yenileme başarısız: ' + (result.error || 'Bilinmeyen hata'), 'error');
+    }
+  } catch (error) {
+    showToast('Hata: ' + error.message, 'error');
+  }
+}
+
+async function runActivityForSession(sessionUser) {
+  try {
+    showToast(`${sessionUser} için aktivite başlatılıyor...`, 'info');
+    
+    const response = await fetch('/admin/automation/api/run-activity', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ session_user: sessionUser })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      showToast('Aktivite başarıyla tamamlandı!', 'success');
+      setTimeout(() => location.reload(), 2000);
+    } else {
+      showToast('Aktivite başarısız: ' + (result.error || 'Bilinmeyen hata'), 'error');
+    }
+  } catch (error) {
+    showToast('Hata: ' + error.message, 'error');
+  }
+}
+
+async function viewSessionDetails(sessionId) {
+  try {
+    const modal = new bootstrap.Modal(document.getElementById('sessionDetailsModal'));
+    const content = document.getElementById('sessionDetailsContent');
+    
+    content.innerHTML = '<div class="text-center"><div class="spinner-border"></div></div>';
+    modal.show();
+    
+    // Find session data from the table
+    const sessions = {{ all_sessions | tojson }};
+    const session = sessions.find(s => s.sessionid === sessionId);
+    
+    if (session) {
+      content.innerHTML = `
+        <div class="row">
+          <div class="col-md-6">
+            <h6>Temel Bilgiler</h6>
+            <table class="table table-sm">
+              <tr><td><strong>Kullanıcı:</strong></td><td>${session.user}</td></tr>
+              <tr><td><strong>User ID:</strong></td><td>${session.ds_user_id}</td></tr>
+              <tr><td><strong>Durum:</strong></td><td><span class="badge bg-${session.status === 'active' ? 'success' : 'danger'}">${session.status}</span></td></tr>
+              <tr><td><strong>Son Kullanım:</strong></td><td>${session.last_used || 'Hiç'}</td></tr>
+              <tr><td><strong>Bloklu:</strong></td><td>${session.blocked ? '✅' : '❌'}</td></tr>
+            </table>
+          </div>
+          <div class="col-md-6">
+            <h6>İstatistikler</h6>
+            <table class="table table-sm">
+              <tr><td><strong>Başarılı:</strong></td><td><span class="badge bg-success">${session.success_count || 0}</span></td></tr>
+              <tr><td><strong>Başarısız:</strong></td><td><span class="badge bg-danger">${session.fail_count || 0}</span></td></tr>
+              <tr><td><strong>Session Key:</strong></td><td><code>${session.session_key || 'N/A'}</code></td></tr>
+            </table>
+          </div>
+        </div>
+        <div class="mt-3">
+          <h6>Session ID</h6>
+          <div class="bg-light p-2 rounded">
+            <code style="font-size: 0.8em;">${sessionId}</code>
+          </div>
+        </div>
+      `;
+    } else {
+      content.innerHTML = '<div class="alert alert-danger">Session bulunamadı</div>';
+    }
+  } catch (error) {
+    document.getElementById('sessionDetailsContent').innerHTML = 
+      `<div class="alert alert-danger">Hata: ${error.message}</div>`;
+  }
+}
+
+async function viewSessionActivity(sessionId) {
+  try {
+    const modal = new bootstrap.Modal(document.getElementById('sessionActivityModal'));
+    const content = document.getElementById('sessionActivityContent');
+    
+    content.innerHTML = '<div class="text-center"><div class="spinner-border"></div></div>';
+    modal.show();
+    
+    const response = await fetch(`/admin/automation/api/session-activity/${sessionId}`);
+    const data = await response.json();
+    
+    if (response.ok && data.activity) {
+      const activity = data.activity;
+      const canPerform = data.can_perform;
+      
+      content.innerHTML = `
+        <div class="row">
+          <div class="col-md-6">
+            <h6>Bugünkü Aktiviteler</h6>
+            <table class="table table-sm">
+              <tr><td>❤️ Beğeniler:</td><td><span class="badge bg-info">${activity.likes || 0}</span></td></tr>
+              <tr><td>📖 Story İzleme:</td><td><span class="badge bg-primary">${activity.stories || 0}</span></td></tr>
+              <tr><td>👥 Takip Etme:</td><td><span class="badge bg-success">${activity.follows || 0}</span></td></tr>
+              <tr><td>👥 Takip Bırakma:</td><td><span class="badge bg-warning">${activity.unfollows || 0}</span></td></tr>
+              <tr><td>💬 Yorumlar:</td><td><span class="badge bg-secondary">${activity.comments || 0}</span></td></tr>
+              <tr><td>👁️ Profil Ziyaretleri:</td><td><span class="badge bg-info">${activity.profile_visits || 0}</span></td></tr>
+            </table>
+          </div>
+          <div class="col-md-6">
+            <h6>Yapabilir mi?</h6>
+            <table class="table table-sm">
+              <tr><td>❤️ Beğeni:</td><td>${canPerform.likes ? '✅' : '❌'}</td></tr>
+              <tr><td>📖 Story:</td><td>${canPerform.stories ? '✅' : '❌'}</td></tr>
+              <tr><td>👥 Takip:</td><td>${canPerform.follows ? '✅' : '❌'}</td></tr>
+              <tr><td>👥 Takip Bırakma:</td><td>${canPerform.unfollows ? '✅' : '❌'}</td></tr>
+              <tr><td>💬 Yorum:</td><td>${canPerform.comments ? '✅' : '❌'}</td></tr>
+            </table>
+          </div>
+        </div>
+      `;
+    } else {
+      content.innerHTML = '<div class="alert alert-danger">Aktivite verileri alınamadı</div>';
+    }
+  } catch (error) {
+    document.getElementById('sessionActivityContent').innerHTML = 
+      `<div class="alert alert-danger">Hata: ${error.message}</div>`;
+  }
+}
+
+function showToast(message, type) {
+  const toast = document.createElement('div');
+  toast.className = `alert alert-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info'} position-fixed`;
+  toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+  toast.textContent = message;
+  
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.remove();
+  }, 5000);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,417 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Aktivite Logları - Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1>📋 Aktivite Logları</h1>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('admin.automation_dashboard') }}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Dashboard'a Dön
+    </a>
+    <button class="btn btn-primary" onclick="refreshLogs()">
+      <i class="bi bi-arrow-clockwise"></i> Yenile
+    </button>
+    <button class="btn btn-outline-primary" onclick="exportLogs()">
+      <i class="bi bi-download"></i> Dışa Aktar
+    </button>
+  </div>
+</div>
+
+{% if error %}
+<div class="alert alert-danger">{{ error }}</div>
+{% else %}
+
+<!-- Filter Controls -->
+<div class="card mb-4">
+  <div class="card-header">
+    <h6 class="mb-0">Filtreler</h6>
+  </div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-3">
+        <label class="form-label">Aktivite Türü</label>
+        <select class="form-select" id="typeFilter" onchange="applyFilters()">
+          <option value="">Tümü</option>
+          <option value="scheduled_activity">Zamanlanmış Aktivite</option>
+          <option value="manual_activity">Manuel Aktivite</option>
+          <option value="session_refresh">Session Yenileme</option>
+          <option value="automation_toggle">Otomasyon Açma/Kapama</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Durum</label>
+        <select class="form-select" id="statusFilter" onchange="applyFilters()">
+          <option value="">Tümü</option>
+          <option value="success">Başarılı</option>
+          <option value="error">Hatalı</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Session Kullanıcısı</label>
+        <input type="text" class="form-control" id="userFilter" placeholder="Kullanıcı adı..." onkeyup="applyFilters()">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Tarih Aralığı</label>
+        <select class="form-select" id="dateFilter" onchange="applyFilters()">
+          <option value="">Tümü</option>
+          <option value="today">Bugün</option>
+          <option value="yesterday">Dün</option>
+          <option value="week">Son 7 Gün</option>
+          <option value="month">Son 30 Gün</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Logs Table -->
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Aktivite Logları ({{ logs|length }} kayıt)</h5>
+    <div class="d-flex gap-2">
+      <button class="btn btn-sm btn-outline-danger" onclick="clearFilters()">
+        <i class="bi bi-x-circle"></i> Filtreleri Temizle
+      </button>
+    </div>
+  </div>
+  <div class="card-body p-0">
+    {% if logs %}
+    <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+      <table class="table table-hover table-sm mb-0" id="logsTable">
+        <thead class="table-light sticky-top">
+          <tr>
+            <th style="width: 150px;">Zaman</th>
+            <th style="width: 120px;">Tür</th>
+            <th style="width: 100px;">Kullanıcı</th>
+            <th style="width: 80px;">Durum</th>
+            <th>Detaylar</th>
+            <th style="width: 60px;">İşlemler</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in logs %}
+          <tr class="log-row" 
+              data-type="{{ log.type }}" 
+              data-user="{{ log.session_user or '' }}"
+              data-timestamp="{{ log.timestamp }}"
+              data-status="{% if log.result and log.result.success %}success{% elif log.error or (log.result and not log.result.success) %}error{% else %}info{% endif %}">
+            <td>
+              <small class="text-muted">
+                {{ log.timestamp[:16].replace('T', ' ') if log.timestamp else 'N/A' }}
+              </small>
+            </td>
+            <td>
+              {% if log.type == 'scheduled_activity' %}
+                <span class="badge bg-primary">📅 Zamanlanmış</span>
+              {% elif log.type == 'manual_activity' %}
+                <span class="badge bg-info">✋ Manuel</span>
+              {% elif log.type == 'session_refresh' %}
+                <span class="badge bg-secondary">🔄 Yenileme</span>
+              {% elif log.type == 'automation_toggle' %}
+                <span class="badge bg-warning">⚙️ Ayar</span>
+              {% else %}
+                <span class="badge bg-light text-dark">{{ log.type }}</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if log.session_user %}
+                <strong>{{ log.session_user }}</strong>
+              {% else %}
+                <small class="text-muted">-</small>
+              {% endif %}
+            </td>
+            <td>
+              {% if log.result and log.result.success %}
+                <span class="badge bg-success">✅ Başarılı</span>
+              {% elif log.error or (log.result and not log.result.success) %}
+                <span class="badge bg-danger">❌ Hatalı</span>
+              {% else %}
+                <span class="badge bg-info">ℹ️ Bilgi</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="log-details">
+                {% if log.result %}
+                  {% if log.result.activities %}
+                    <div class="d-flex gap-1 flex-wrap">
+                      {% for activity, count in log.result.activities.items() %}
+                        {% if count %}
+                          <span class="badge bg-light text-dark">
+                            {% if activity == 'likes' %}❤️{% elif activity == 'stories_viewed' %}📖{% elif activity == 'explore_browsed' %}🔍{% endif %}
+                            {{ count }}
+                          </span>
+                        {% endif %}
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                  {% if log.result.error %}
+                    <small class="text-danger">{{ log.result.error }}</small>
+                  {% endif %}
+                {% elif log.error %}
+                  <small class="text-danger">{{ log.error }}</small>
+                {% elif log.type == 'session_refresh' %}
+                  <small class="text-muted">{{ log.sessions_count }} session yenilendi</small>
+                {% elif log.type == 'automation_toggle' %}
+                  <small class="text-muted">Otomasyon {{ 'açıldı' if log.enabled else 'kapatıldı' }}</small>
+                {% endif %}
+              </div>
+            </td>
+            <td>
+              <button class="btn btn-sm btn-outline-info" 
+                      onclick="viewLogDetails({{ loop.index0 }})"
+                      title="Detayları Gör">
+                <i class="bi bi-eye"></i>
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center text-muted py-5">
+      <i class="bi bi-inbox fs-1"></i>
+      <p class="mt-2">Henüz aktivite logu bulunamadı</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endif %}
+
+<!-- Log Details Modal -->
+<div class="modal fade" id="logDetailsModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Log Detayları</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="logDetailsContent">
+        <!-- Content will be loaded here -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const allLogs = {{ logs | tojson }};
+
+function applyFilters() {
+  const typeFilter = document.getElementById('typeFilter').value;
+  const statusFilter = document.getElementById('statusFilter').value;
+  const userFilter = document.getElementById('userFilter').value.toLowerCase();
+  const dateFilter = document.getElementById('dateFilter').value;
+  
+  const rows = document.querySelectorAll('.log-row');
+  let visibleCount = 0;
+  
+  rows.forEach(row => {
+    let show = true;
+    
+    // Type filter
+    if (typeFilter && row.dataset.type !== typeFilter) {
+      show = false;
+    }
+    
+    // Status filter
+    if (statusFilter && row.dataset.status !== statusFilter) {
+      show = false;
+    }
+    
+    // User filter
+    if (userFilter && !row.dataset.user.toLowerCase().includes(userFilter)) {
+      show = false;
+    }
+    
+    // Date filter
+    if (dateFilter && !matchesDateFilter(row.dataset.timestamp, dateFilter)) {
+      show = false;
+    }
+    
+    row.style.display = show ? '' : 'none';
+    if (show) visibleCount++;
+  });
+  
+  // Update count
+  document.querySelector('.card-header h5').textContent = 
+    `Aktivite Logları (${visibleCount} kayıt gösteriliyor)`;
+}
+
+function matchesDateFilter(timestamp, filter) {
+  if (!timestamp || !filter) return true;
+  
+  const logDate = new Date(timestamp);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  
+  switch (filter) {
+    case 'today':
+      return logDate >= today;
+    case 'yesterday':
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      return logDate >= yesterday && logDate < today;
+    case 'week':
+      const weekAgo = new Date(today);
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return logDate >= weekAgo;
+    case 'month':
+      const monthAgo = new Date(today);
+      monthAgo.setDate(monthAgo.getDate() - 30);
+      return logDate >= monthAgo;
+    default:
+      return true;
+  }
+}
+
+function clearFilters() {
+  document.getElementById('typeFilter').value = '';
+  document.getElementById('statusFilter').value = '';
+  document.getElementById('userFilter').value = '';
+  document.getElementById('dateFilter').value = '';
+  applyFilters();
+}
+
+function viewLogDetails(index) {
+  const log = allLogs[index];
+  const modal = new bootstrap.Modal(document.getElementById('logDetailsModal'));
+  const content = document.getElementById('logDetailsContent');
+  
+  let detailsHtml = `
+    <div class="row">
+      <div class="col-md-6">
+        <h6>Genel Bilgiler</h6>
+        <table class="table table-sm">
+          <tr><td><strong>Zaman:</strong></td><td>${log.timestamp || 'N/A'}</td></tr>
+          <tr><td><strong>Tür:</strong></td><td>${log.type}</td></tr>
+          <tr><td><strong>Kullanıcı:</strong></td><td>${log.session_user || 'N/A'}</td></tr>
+        </table>
+      </div>
+      <div class="col-md-6">
+  `;
+  
+  if (log.result) {
+    detailsHtml += `
+        <h6>Sonuç</h6>
+        <table class="table table-sm">
+          <tr><td><strong>Başarılı:</strong></td><td>${log.result.success ? '✅' : '❌'}</td></tr>
+    `;
+    
+    if (log.result.activities) {
+      detailsHtml += `<tr><td><strong>Aktiviteler:</strong></td><td>`;
+      for (const [activity, count] of Object.entries(log.result.activities)) {
+        if (count) {
+          detailsHtml += `<span class="badge bg-primary me-1">${activity}: ${count}</span>`;
+        }
+      }
+      detailsHtml += `</td></tr>`;
+    }
+    
+    if (log.result.error) {
+      detailsHtml += `<tr><td><strong>Hata:</strong></td><td><span class="text-danger">${log.result.error}</span></td></tr>`;
+    }
+    
+    detailsHtml += `</table>`;
+  } else if (log.error) {
+    detailsHtml += `
+        <h6>Hata</h6>
+        <div class="alert alert-danger">${log.error}</div>
+    `;
+  }
+  
+  detailsHtml += `
+      </div>
+    </div>
+  `;
+  
+  if (log.type === 'session_refresh' && log.sessions_count !== undefined) {
+    detailsHtml += `
+      <div class="mt-3">
+        <h6>Session Yenileme</h6>
+        <p>Toplam ${log.sessions_count} session yenilendi.</p>
+      </div>
+    `;
+  }
+  
+  if (log.type === 'automation_toggle' && log.enabled !== undefined) {
+    detailsHtml += `
+      <div class="mt-3">
+        <h6>Otomasyon Ayarı</h6>
+        <p>Otomasyon ${log.enabled ? 'etkinleştirildi' : 'devre dışı bırakıldı'}.</p>
+      </div>
+    `;
+  }
+  
+  // Raw data
+  detailsHtml += `
+    <div class="mt-3">
+      <h6>Ham Veri</h6>
+      <pre class="bg-light p-2 rounded" style="font-size: 0.8em; max-height: 200px; overflow-y: auto;">${JSON.stringify(log, null, 2)}</pre>
+    </div>
+  `;
+  
+  content.innerHTML = detailsHtml;
+  modal.show();
+}
+
+async function refreshLogs() {
+  try {
+    showToast('Loglar yenileniyor...', 'info');
+    setTimeout(() => location.reload(), 1000);
+  } catch (error) {
+    showToast('Hata: ' + error.message, 'error');
+  }
+}
+
+function exportLogs() {
+  try {
+    const dataStr = JSON.stringify(allLogs, null, 2);
+    const dataBlob = new Blob([dataStr], {type: 'application/json'});
+    const url = URL.createObjectURL(dataBlob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `automation_logs_${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    
+    URL.revokeObjectURL(url);
+    showToast('Loglar başarıyla dışa aktarıldı!', 'success');
+  } catch (error) {
+    showToast('Dışa aktarma hatası: ' + error.message, 'error');
+  }
+}
+
+function showToast(message, type) {
+  const toast = document.createElement('div');
+  toast.className = `alert alert-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info'} position-fixed`;
+  toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+  toast.textContent = message;
+  
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.remove();
+  }, 5000);
+}
+
+// Auto-refresh every 30 seconds
+setInterval(() => {
+  if (document.visibilityState === 'visible') {
+    fetch('/admin/automation/api/logs?limit=10')
+      .then(response => response.json())
+      .then(newLogs => {
+        // Simple check if there are new logs
+        if (newLogs.length > 0 && newLogs[0].timestamp !== allLogs[0]?.timestamp) {
+          const badge = document.createElement('span');
+          badge.className = 'badge bg-warning ms-2';
+          badge.textContent = 'Yeni loglar var';
+          document.querySelector('.card-header h5').appendChild(badge);
+        }
+      })
+      .catch(console.error);
+  }
+}, 30000);
+</script>
+{% endblock %}
