@@ -1,0 +1,390 @@
+/* adminpanel/static/admin/automation.css */
+/* Instagram Automation System Styles */
+
+/* Dashboard Cards */
+.automation-card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.automation-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.automation-card .card-body {
+  padding: 1.5rem;
+}
+
+/* Status Indicators */
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.status-indicator.active {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.status-indicator.inactive {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.status-indicator.pending {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+}
+
+/* Activity Timeline */
+.activity-timeline {
+  position: relative;
+  padding-left: 2rem;
+}
+
+.activity-timeline::before {
+  content: '';
+  position: absolute;
+  left: 0.5rem;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #e9ecef;
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 1.5rem;
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -1.75rem;
+  top: 1rem;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #007bff;
+  border: 3px solid white;
+  box-shadow: 0 0 0 2px #e9ecef;
+}
+
+.timeline-item.success::before {
+  background: #28a745;
+}
+
+.timeline-item.error::before {
+  background: #dc3545;
+}
+
+.timeline-item.warning::before {
+  background: #ffc107;
+}
+
+/* Session Cards */
+.session-card {
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.session-card:hover {
+  border-color: #007bff;
+  box-shadow: 0 2px 8px rgba(0,123,255,0.1);
+}
+
+.session-card.active {
+  border-color: #28a745;
+  background-color: #f8fff9;
+}
+
+.session-card.blocked {
+  border-color: #ffc107;
+  background-color: #fffef8;
+}
+
+.session-card.invalid {
+  border-color: #dc3545;
+  background-color: #fff8f8;
+}
+
+/* Activity Badges */
+.activity-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  margin-right: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.activity-badge.likes {
+  background: #fff5f5;
+  border-color: #ffc9c9;
+  color: #c53030;
+}
+
+.activity-badge.follows {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+  color: #0369a1;
+}
+
+.activity-badge.comments {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+
+.activity-badge.stories {
+  background: #fefce8;
+  border-color: #fef08a;
+  color: #a16207;
+}
+
+/* Progress Bars */
+.progress-custom {
+  height: 8px;
+  border-radius: 4px;
+  background-color: #f8f9fa;
+}
+
+.progress-custom .progress-bar {
+  border-radius: 4px;
+}
+
+/* Control Buttons */
+.btn-automation {
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn-automation:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.btn-automation.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+}
+
+.btn-automation.btn-success {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  border: none;
+}
+
+.btn-automation.btn-warning {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  border: none;
+}
+
+/* Switches */
+.form-switch .form-check-input {
+  width: 3rem;
+  height: 1.5rem;
+  border-radius: 3rem;
+  background-color: #e9ecef;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.form-switch .form-check-input:checked {
+  background-color: #28a745;
+  border-color: #28a745;
+}
+
+.form-switch .form-check-input:focus {
+  box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+/* Log Tables */
+.log-table {
+  font-size: 0.875rem;
+}
+
+.log-table .log-row {
+  transition: background-color 0.2s ease;
+}
+
+.log-table .log-row:hover {
+  background-color: #f8f9fa;
+}
+
+.log-details {
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .automation-card .card-body {
+    padding: 1rem;
+  }
+  
+  .activity-timeline {
+    padding-left: 1.5rem;
+  }
+  
+  .timeline-item::before {
+    left: -1.5rem;
+  }
+  
+  .btn-automation {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+  }
+  
+  .activity-badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
+  }
+}
+
+/* Animation Classes */
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* Loading States */
+.loading-spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Toast Notifications */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+}
+
+.custom-toast {
+  min-width: 300px;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+/* Session Activity Indicators */
+.activity-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: bold;
+  margin-right: 0.25rem;
+}
+
+.activity-indicator.high {
+  background-color: #dc3545;
+  color: white;
+}
+
+.activity-indicator.medium {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+.activity-indicator.low {
+  background-color: #28a745;
+  color: white;
+}
+
+.activity-indicator.none {
+  background-color: #6c757d;
+  color: white;
+}
+
+/* Modal Enhancements */
+.modal-automation .modal-content {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+
+.modal-automation .modal-header {
+  border-bottom: 1px solid #f1f3f4;
+  padding: 1.5rem;
+}
+
+.modal-automation .modal-body {
+  padding: 1.5rem;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .automation-card {
+    background-color: #2d3748;
+    color: #e2e8f0;
+  }
+  
+  .timeline-item {
+    background-color: #2d3748;
+    border-color: #4a5568;
+    color: #e2e8f0;
+  }
+  
+  .session-card {
+    background-color: #2d3748;
+    border-color: #4a5568;
+    color: #e2e8f0;
+  }
+  
+  .activity-badge {
+    background-color: #4a5568;
+    border-color: #718096;
+    color: #e2e8f0;
+  }
+}

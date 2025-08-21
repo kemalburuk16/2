@@ -1,0 +1,1 @@
+def get_meta(page, lang): return {}
